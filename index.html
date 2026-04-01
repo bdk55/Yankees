@@ -14,14 +14,14 @@
       --navy-mid:   #112a4f;
       --navy-light: #1a3a6a;
       --navy-card:  #0e1e36;
-      --gold:       #C4A44A;
-      --gold-light: #d4b85a;
+      --accent:     #FFFFFF;
+      --accent-dim: rgba(255,255,255,0.75);
       --white:      #FFFFFF;
-      --silver:     #b0bec5;
-      --muted:      #607d8b;
+      --silver:     #a8b8c8;
+      --muted:      #5c7080;
       --win:        #4caf87;
       --loss:       #e05c5c;
-      --border:     rgba(196,164,74,0.15);
+      --border:     rgba(255,255,255,0.09);
     }
 
     html { scroll-behavior: smooth; }
@@ -51,8 +51,8 @@
         90deg,
         transparent,
         transparent 28px,
-        rgba(196,164,74,0.07) 28px,
-        rgba(196,164,74,0.07) 30px
+        rgba(255,255,255,0.04) 28px,
+        rgba(255,255,255,0.04) 30px
       );
       pointer-events: none;
     }
@@ -62,14 +62,14 @@
       position: absolute;
       bottom: 0; left: 0; right: 0;
       height: 2px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
     }
 
     .hat-icon {
       font-size: 3.2rem;
       line-height: 1;
       margin-bottom: 0.5rem;
-      filter: drop-shadow(0 2px 12px rgba(196,164,74,0.4));
+      filter: drop-shadow(0 2px 16px rgba(255,255,255,0.2));
     }
 
     .site-title {
@@ -82,7 +82,8 @@
     }
 
     .site-title span {
-      color: var(--gold);
+      color: var(--white);
+      text-shadow: 0 0 30px rgba(255,255,255,0.35);
     }
 
     .site-date {
@@ -117,13 +118,13 @@
       gap: 0.5rem;
       padding: 0.85rem 1.25rem;
       border-bottom: 1px solid var(--border);
-      background: rgba(196,164,74,0.04);
+      background: rgba(255,255,255,0.03);
     }
 
     .card-header-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
-      background: var(--gold);
+      background: var(--accent);
       flex-shrink: 0;
     }
 
@@ -133,7 +134,7 @@
       font-weight: 600;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--accent);
     }
 
     .card-body { padding: 1.25rem; }
@@ -157,8 +158,8 @@
       letter-spacing: 0.04em;
     }
 
-    .team-abbr.nyy { color: var(--gold); }
-    .team-abbr.opp { color: var(--white); }
+    .team-abbr.nyy { color: var(--white); }
+    .team-abbr.opp { color: var(--silver); }
 
     .team-full {
       font-size: 0.7rem;
@@ -236,9 +237,9 @@
     }
 
     .status-pill.scheduled {
-      background: rgba(196,164,74,0.08);
-      border: 1px solid rgba(196,164,74,0.2);
-      color: var(--gold);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: var(--accent);
     }
 
     .live-dot {
@@ -288,7 +289,7 @@
     }
 
     .broadcast-link {
-      color: var(--gold);
+      color: var(--accent);
       text-decoration: none;
       font-weight: 600;
       transition: opacity 0.15s;
@@ -419,8 +420,8 @@
 
     .spinner {
       width: 2.2rem; height: 2.2rem;
-      border: 3px solid rgba(196,164,74,0.15);
-      border-top-color: var(--gold);
+      border: 3px solid rgba(255,255,255,0.09);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.75s linear infinite;
       margin: 0 auto 1rem;
