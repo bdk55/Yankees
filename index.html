@@ -361,8 +361,8 @@
 
       // Broadcasts
       const broadcastLinks = {
-        'YES':         'https://www.yesnetwork.com',
-        'YES Network': 'https://www.yesnetwork.com',
+        'YES':         'https://yesnetwork.com/live',
+        'YES Network': 'https://yesnetwork.com/live',
         'MLB.TV':      'https://www.mlb.com/tv',
         'ESPN':        'https://www.espn.com/watch',
         'ESPN+':       'https://plus.espn.com',
@@ -384,7 +384,7 @@
         .map(b => b.name).filter(Boolean)
         .map(name => {
           const url = Object.entries(broadcastLinks).find(([k]) => name.includes(k))?.[1];
-          return url ? `<a href="${url}" target="_blank" rel="noopener" style="color:#c4a44a;text-decoration:none;">${name}</a>` : name;
+          return url ? `<a href="${url}" style="color:#c4a44a;text-decoration:none;">${name}</a>` : name;
         })
         .join('<span style="color:#484f58"> · </span>') || 'TBD';
 
