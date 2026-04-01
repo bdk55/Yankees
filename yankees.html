@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yankees Game Info</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d1117;
+      color: #e6e6e6;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .logo {
+      font-size: 3rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+
+    h1 span {
+      color: #c4a44a;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #8b949e;
+      margin-bottom: 1rem;
+    }
+
+    /* Today's game */
+    .matchup {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      flex: 1;
+    }
+
+    .team-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+    }
+
+    .team-name.yankees { color: #c4a44a; }
+
+    .vs {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #8b949e;
+    }
+
+    .game-meta {
+      margin-top: 1.25rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .meta-item {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+
+    .meta-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8b949e;
+      margin-bottom: 0.25rem;
+    }
+
+    .meta-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e6e6e6;
+    }
+
+    /* Pitchers */
+    .pitchers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .pitcher-card {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+    }
+
+    .pitcher-team {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #8b949e;
+      margin-bottom: 0.3rem;
+    }
+
+    .pitcher-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .pitcher-stats {
+      font-size: 0.75rem;
+      color: #8b949e;
+      margin-top: 0.2rem;
+    }
+
+    /* Last 10 games */
+    .games-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .game-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      background: #0d1117;
+      border-radius: 8px;
+    }
+
+    .result-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      width: 1.6rem;
+      height: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .result-badge.W { background: #1a3a2a; color: #3fb950; }
+    .result-badge.L { background: #3a1a1a; color: #f85149; }
+
+    .game-opponent {
+      flex: 1;
+      font-size: 0.9rem;
+      color: #e6e6e6;
+    }
+
+    .game-score {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #e6e6e6;
+    }
+
+    .game-date {
+      font-size: 0.75rem;
+      color: #8b949e;
+      min-width: 3.5rem;
+      text-align: right;
+    }
+
+    /* Record strip */
+    .record-strip {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pip {
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      font-size: 0.65rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pip.W { background: #3fb950; color: #0d1117; }
+    .pip.L { background: #f85149; color: #0d1117; }
+
+    .record-text {
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-left: 0.5rem;
+    }
+
+    .no-game {
+      text-align: center;
+      padding: 2rem;
+      color: #8b949e;
+      font-size: 1rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #8b949e;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid #30363d;
+      border-top-color: #c4a44a;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 0.75rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error {
+      background: #3a1a1a;
+      border: 1px solid #f85149;
+      border-radius: 8px;
+      padding: 1rem;
+      color: #f85149;
+      text-align: center;
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.7rem;
+      color: #484f58;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">⚾</div>
+    <h1>New York <span>Yankees</span></h1>
+  </header>
+
+  <div class="container" id="app">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div>Loading game data…</div>
+    </div>
+  </div>
+
+  <footer>Data via MLB Stats API &nbsp;·&nbsp; Updates on page load</footer>
+
+  <script>
+    const YANKEES_ID = 147;
+
+    function fmt(dateStr) {
+      // dateStr: "YYYY-MM-DD"
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function fmtTime(datetime) {
+      // datetime: "2025-04-01T18:05:00Z"
+      const dt = new Date(datetime);
+      return dt.toLocaleTimeString('en-US', {
+        hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+      });
+    }
+
+    async function fetchJSON(url) {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    async function getTodayGame() {
+      const today = new Date().toISOString().slice(0, 10);
+      const url = `https://statsapi.mlb.com/api/v1/schedule?teamId=${YANKEES_ID}&date=${today}&hydrate=probablePitcher(note),broadcasts(all),linescore`;
+      const data = await fetchJSON(url);
+      const dates = data.dates || [];
+      if (!dates.length || !dates[0].games.length) return null;
+      return dates[0].games[0];
+    }
+
+    async function getLast10() {
+      // Fetch games ending yesterday, last 15 to ensure 10 completed
+      const end = new Date();
+      end.setDate(end.getDate() - 1);
+      const start = new Date();
+      start.setDate(start.getDate() - 30);
+      const s = start.toISOString().slice(0, 10);
+      const e = end.toISOString().slice(0, 10);
+      const url = `https://statsapi.mlb.com/api/v1/schedule?teamId=${YANKEES_ID}&startDate=${s}&endDate=${e}&hydrate=linescore`;
+      const data = await fetchJSON(url);
+      const games = [];
+      for (const d of (data.dates || []).reverse()) {
+        for (const g of d.games.reverse()) {
+          if (g.status.abstractGameState === 'Final') {
+            games.push(g);
+            if (games.length === 10) return games;
+          }
+        }
+      }
+      return games;
+    }
+
+    function buildTodayCard(game) {
+      if (!game) {
+        return `<div class="card"><div class="no-game">No Yankees game scheduled today.</div></div>`;
+      }
+
+      const isHome = game.teams.home.team.id === YANKEES_ID;
+      const yankeeTeam = isHome ? game.teams.home : game.teams.away;
+      const oppTeam = isHome ? game.teams.away : game.teams.home;
+      const oppName = oppTeam.team.name;
+
+      const gameTime = game.gameDate ? fmtTime(game.gameDate) : 'TBD';
+      const venue = game.venue?.name || '—';
+      const homeAway = isHome ? 'Home' : 'Away';
+
+      // Broadcasts
+      const broadcasts = game.broadcasts || [];
+      const tvList = broadcasts
+        .filter(b => b.type === 'TV' || !b.type)
+        .map(b => b.name)
+        .join(', ') || 'TBD';
+
+      // Starting pitchers
+      const yankPitcher = yankeeTeam.probablePitcher;
+      const oppPitcher = oppTeam.probablePitcher;
+
+      const renderPitcher = (p, teamLabel) => {
+        if (!p) return `<div class="pitcher-card"><div class="pitcher-team">${teamLabel}</div><div class="pitcher-name">TBD</div></div>`;
+        const note = p.note ? `<div class="pitcher-stats">${p.note}</div>` : '';
+        return `
+          <div class="pitcher-card">
+            <div class="pitcher-team">${teamLabel}</div>
+            <div class="pitcher-name">${p.fullName}</div>
+            ${note}
+          </div>`;
+      };
+
+      return `
+        <div class="card">
+          <div class="card-title">Today's Game</div>
+          <div class="matchup">
+            <div class="team">
+              <div class="team-name yankees">New York Yankees</div>
+            </div>
+            <div class="vs">VS</div>
+            <div class="team">
+              <div class="team-name">${oppName}</div>
+            </div>
+          </div>
+          <div class="game-meta">
+            <div class="meta-item">
+              <div class="meta-label">First Pitch</div>
+              <div class="meta-value">${gameTime}</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Location</div>
+              <div class="meta-value">${homeAway} · ${venue}</div>
+            </div>
+            <div class="meta-item" style="grid-column: 1 / -1">
+              <div class="meta-label">TV / Broadcast</div>
+              <div class="meta-value">${tvList}</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Starting Pitchers</div>
+          <div class="pitchers">
+            ${renderPitcher(yankPitcher, 'Yankees')}
+            ${renderPitcher(oppPitcher, oppTeam.team.name)}
+          </div>
+        </div>`;
+    }
+
+    function buildLast10Card(games) {
+      if (!games.length) {
+        return `<div class="card"><div class="no-game">No recent game data available.</div></div>`;
+      }
+
+      let wins = 0, losses = 0;
+      const rows = games.map(g => {
+        const isHome = g.teams.home.team.id === YANKEES_ID;
+        const yankTeam = isHome ? g.teams.home : g.teams.away;
+        const oppTeam = isHome ? g.teams.away : g.teams.home;
+
+        const yScore = yankTeam.score ?? 0;
+        const oScore = oppTeam.score ?? 0;
+        const won = yankTeam.isWinner;
+        const result = won ? 'W' : 'L';
+        won ? wins++ : losses++;
+
+        const dateStr = fmt(g.officialDate || g.gameDate?.slice(0, 10));
+        const ha = isHome ? 'vs' : '@';
+
+        return `
+          <div class="game-row">
+            <div class="result-badge ${result}">${result}</div>
+            <div class="game-opponent">${ha} ${oppTeam.team.name}</div>
+            <div class="game-score">${yScore}–${oScore}</div>
+            <div class="game-date">${dateStr}</div>
+          </div>`;
+      });
+
+      const pips = games.map(g => {
+        const isHome = g.teams.home.team.id === YANKEES_ID;
+        const yankTeam = isHome ? g.teams.home : g.teams.away;
+        const won = yankTeam.isWinner;
+        return `<div class="pip ${won ? 'W' : 'L'}">${won ? 'W' : 'L'}</div>`;
+      }).join('');
+
+      return `
+        <div class="card">
+          <div class="card-title">Last 10 Games</div>
+          <div class="record-strip" style="margin-bottom: 1rem">
+            ${pips}
+            <span class="record-text">${wins}–${losses} last 10</span>
+          </div>
+          <div class="games-list">${rows.join('')}</div>
+        </div>`;
+    }
+
+    async function main() {
+      const app = document.getElementById('app');
+      try {
+        const [todayGame, last10] = await Promise.all([getTodayGame(), getLast10()]);
+        app.innerHTML = buildTodayCard(todayGame) + buildLast10Card(last10);
+      } catch (err) {
+        app.innerHTML = `<div class="error">Failed to load game data: ${err.message}<br>Check your network connection and try reloading.</div>`;
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>
