@@ -360,11 +360,33 @@
       const homeAway = isHome ? 'Home' : 'Away';
 
       // Broadcasts
+      const broadcastLinks = {
+        'YES':         'https://www.yesnetwork.com',
+        'YES Network': 'https://www.yesnetwork.com',
+        'MLB.TV':      'https://www.mlb.com/tv',
+        'ESPN':        'https://www.espn.com/watch',
+        'ESPN+':       'https://plus.espn.com',
+        'ESPN2':       'https://www.espn.com/watch',
+        'Fox':         'https://www.foxsports.com/live',
+        'FS1':         'https://www.foxsports.com/live',
+        'TBS':         'https://www.tbs.com/watchtbs',
+        'Apple TV+':   'https://tv.apple.com',
+        'Peacock':     'https://www.peacocktv.com',
+        'Amazon':      'https://www.amazon.com/primevideo',
+        'Prime Video': 'https://www.amazon.com/primevideo',
+        'NBC Sports':  'https://www.nbcsports.com',
+        'NESN':        'https://nesn.com',
+        'MLBN':        'https://www.mlb.com/network',
+        'MLB Network': 'https://www.mlb.com/network',
+      };
       const broadcasts = game.broadcasts || [];
       const tvList = broadcasts
-        .map(b => b.name)
-        .filter(Boolean)
-        .join(', ') || 'TBD';
+        .map(b => b.name).filter(Boolean)
+        .map(name => {
+          const url = Object.entries(broadcastLinks).find(([k]) => name.includes(k))?.[1];
+          return url ? `<a href="${url}" target="_blank" rel="noopener" style="color:#c4a44a;text-decoration:none;">${name}</a>` : name;
+        })
+        .join('<span style="color:#484f58"> · </span>') || 'TBD';
 
       // Starting pitchers
       const yankPitcher = yankeeTeam.probablePitcher;
@@ -404,7 +426,7 @@
             </div>
             <div class="meta-item" style="grid-column: 1 / -1">
               <div class="meta-label">TV / Broadcast</div>
-              <div class="meta-value">${tvList}</div>
+              <div class="meta-value" style="display:flex;flex-wrap:wrap;gap:0.4rem 0.75rem;">${tvList}</div>
             </div>
           </div>
         </div>
