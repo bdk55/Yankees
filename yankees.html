@@ -316,7 +316,7 @@
 
     async function getTodayGame() {
       const today = new Date().toISOString().slice(0, 10);
-      const url = `https://statsapi.mlb.com/api/v1/schedule?teamId=${YANKEES_ID}&date=${today}&hydrate=probablePitcher(note),broadcasts(all),linescore`;
+      const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}&date=${today}&hydrate=probablePitcher,broadcasts,linescore`;
       const data = await fetchJSON(url);
       const dates = data.dates || [];
       if (!dates.length || !dates[0].games.length) return null;
@@ -331,7 +331,7 @@
       start.setDate(start.getDate() - 30);
       const s = start.toISOString().slice(0, 10);
       const e = end.toISOString().slice(0, 10);
-      const url = `https://statsapi.mlb.com/api/v1/schedule?teamId=${YANKEES_ID}&startDate=${s}&endDate=${e}&hydrate=linescore`;
+      const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}&startDate=${s}&endDate=${e}&hydrate=linescore`;
       const data = await fetchJSON(url);
       const games = [];
       for (const d of (data.dates || []).reverse()) {
@@ -362,8 +362,8 @@
       // Broadcasts
       const broadcasts = game.broadcasts || [];
       const tvList = broadcasts
-        .filter(b => b.type === 'TV' || !b.type)
         .map(b => b.name)
+        .filter(Boolean)
         .join(', ') || 'TBD';
 
       // Starting pitchers
