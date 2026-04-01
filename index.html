@@ -95,6 +95,71 @@
       font-weight: 500;
     }
 
+    .live-score {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      margin: 1.25rem 0 0.5rem;
+    }
+
+    .score-num {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #fff;
+      min-width: 2.5rem;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .score-sep {
+      font-size: 2rem;
+      color: #484f58;
+      font-weight: 300;
+    }
+
+    .inning-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #e6e6e6;
+      margin: 0 auto;
+      width: fit-content;
+    }
+
+    .live-dot {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: #3fb950;
+      animation: pulse 1.2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .final-badge {
+      display: inline-block;
+      background: #1a1a2e;
+      border: 1px solid #30363d;
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #8b949e;
+      margin: 0 auto;
+      width: fit-content;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
     .vs {
       font-size: 1.4rem;
       font-weight: 700;
@@ -413,6 +478,33 @@
           </div>`;
       };
 
+      const state = game.status.abstractGameState; // Preview, Live, Final
+      const ls = game.linescore || {};
+      const isLive = state === 'Live';
+      const isFinal = state === 'Final';
+      const showScore = isLive || isFinal;
+
+      const homeRuns = ls.teams?.home?.runs ?? (isFinal ? (isHome ? yankeeTeam.score ?? 0 : oppTeam.score ?? 0) : null);
+      const awayRuns = ls.teams?.away?.runs ?? (isFinal ? (!isHome ? yankeeTeam.score ?? 0 : oppTeam.score ?? 0) : null);
+      const yankRuns = isHome ? homeRuns : awayRuns;
+      const oppRuns  = isHome ? awayRuns : homeRuns;
+
+      const inningLabel = isLive
+        ? `${ls.inningHalf === 'Bottom' ? '▼' : '▲'} ${ls.currentInningOrdinal || ''} · ${ls.outs ?? 0} out${ls.outs === 1 ? '' : 's'}`
+        : isFinal ? 'Final' : '';
+
+      const scoreboard = showScore ? `
+        <div class="live-score">
+          <div class="score-num">${yankRuns}</div>
+          <div class="score-sep">–</div>
+          <div class="score-num">${oppRuns}</div>
+        </div>
+        <div style="text-align:center;margin-bottom:0.75rem">
+          ${isLive
+            ? `<div class="inning-badge"><div class="live-dot"></div>${inningLabel}</div>`
+            : `<div class="final-badge">Final</div>`}
+        </div>` : '';
+
       return `
         <div class="card">
           <div class="card-title">Today's Game</div>
@@ -421,12 +513,14 @@
               <div class="team-name yankees">New York Yankees</div>
               <div class="team-record">${yankRecord}</div>
             </div>
-            <div class="vs">VS</div>
+            <div class="vs">${showScore ? `<div style="text-align:center"><div class="score-num" style="font-size:2rem">${yankRuns}–${oppRuns}</div></div>` : 'VS'}</div>
             <div class="team">
               <div class="team-name">${oppName}</div>
               <div class="team-record">${oppRecord}</div>
             </div>
           </div>
+          ${isLive ? `<div style="text-align:center;margin-top:0.75rem"><div class="inning-badge"><div class="live-dot"></div>${inningLabel}</div></div>` : ''}
+          ${isFinal ? `<div style="text-align:center;margin-top:0.75rem"><div class="final-badge">Final</div></div>` : ''}
           <div class="game-meta">
             <div class="meta-item">
               <div class="meta-label">First Pitch</div>
@@ -498,11 +592,18 @@
         </div>`;
     }
 
+    let refreshTimer = null;
+
     async function main() {
       const app = document.getElementById('app');
       try {
         const [todayGame, last10] = await Promise.all([getTodayGame(), getLast10()]);
         app.innerHTML = buildTodayCard(todayGame) + buildLast10Card(last10);
+
+        if (todayGame?.status.abstractGameState === 'Live') {
+          clearTimeout(refreshTimer);
+          refreshTimer = setTimeout(main, 30000);
+        }
       } catch (err) {
         app.innerHTML = `<div class="error">Failed to load game data: ${err.message}<br>Check your network connection and try reloading.</div>`;
       }
