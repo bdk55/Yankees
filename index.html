@@ -322,7 +322,7 @@
 
     async function getTodayGame() {
       const today = new Date().toISOString().slice(0, 10);
-      const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}&date=${today}&hydrate=probablePitcher,broadcasts,linescore`;
+      const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}&date=${today}&hydrate=probablePitcher,broadcasts,linescore,team(record)`;
       const data = await fetchJSON(url);
       const dates = data.dates || [];
       if (!dates.length || !dates[0].games.length) return null;
@@ -361,7 +361,7 @@
       const oppTeam = isHome ? game.teams.away : game.teams.home;
       const oppName = oppTeam.team.name;
 
-      const rec = t => { const r = t.leagueRecord; return r ? `(${r.wins}-${r.losses})` : ''; };
+      const rec = t => { const r = t.leagueRecord || t.team?.record?.leagueRecord; return r ? `(${r.wins}-${r.losses})` : ''; };
       const yankRecord = rec(yankeeTeam);
       const oppRecord = rec(oppTeam);
 
