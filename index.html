@@ -89,6 +89,12 @@
 
     .team-name.yankees { color: #c4a44a; }
 
+    .team-record {
+      font-size: 0.8rem;
+      color: #8b949e;
+      font-weight: 500;
+    }
+
     .vs {
       font-size: 1.4rem;
       font-weight: 700;
@@ -355,6 +361,10 @@
       const oppTeam = isHome ? game.teams.away : game.teams.home;
       const oppName = oppTeam.team.name;
 
+      const rec = t => { const r = t.leagueRecord; return r ? `(${r.wins}-${r.losses})` : ''; };
+      const yankRecord = rec(yankeeTeam);
+      const oppRecord = rec(oppTeam);
+
       const gameTime = game.gameDate ? fmtTime(game.gameDate) : 'TBD';
       const venue = game.venue?.name || '—';
       const homeAway = isHome ? 'Home' : 'Away';
@@ -409,10 +419,12 @@
           <div class="matchup">
             <div class="team">
               <div class="team-name yankees">New York Yankees</div>
+              <div class="team-record">${yankRecord}</div>
             </div>
             <div class="vs">VS</div>
             <div class="team">
               <div class="team-name">${oppName}</div>
+              <div class="team-record">${oppRecord}</div>
             </div>
           </div>
           <div class="game-meta">
