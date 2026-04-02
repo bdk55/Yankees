@@ -412,7 +412,131 @@
       text-align: right;
     }
 
-    /* ── LOADING / ERROR / NO GAME ── */
+    /* ── SEASON STAT BAR ── */
+    .stat-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.85rem;
+    }
+
+    .stat-chip {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      padding: 0.3rem 0.85rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      color: var(--silver);
+    }
+
+    .stat-chip strong {
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    /* ── STANDINGS TABLE ── */
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .standings-table th {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 0 0.5rem 0.65rem;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .standings-table th:first-child { text-align: left; padding-left: 0; }
+
+    .standings-table td {
+      font-size: 0.85rem;
+      padding: 0.6rem 0.5rem;
+      text-align: right;
+      color: var(--silver);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .standings-table td:first-child {
+      text-align: left;
+      padding-left: 0;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: 0.03em;
+    }
+
+    .standings-table tr.yankees-row td {
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    .standings-table tr.yankees-row td:first-child {
+      color: var(--white);
+    }
+
+    .standings-table tr:last-child td { border-bottom: none; }
+
+    .gb-dash { color: var(--muted); }
+
+    /* ── UPCOMING GAMES ── */
+    .upcoming-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .upcoming-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 10px;
+      transition: background 0.15s;
+    }
+
+    .upcoming-row:hover { background: rgba(255,255,255,0.03); }
+
+    .upcoming-date {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 3.2rem;
+      letter-spacing: 0.05em;
+    }
+
+    .upcoming-ha {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.15rem 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .upcoming-opp {
+      flex: 1;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--silver);
+    }
+
+    .upcoming-time {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: right;
+      white-space: nowrap;
+    }
     .state-box {
       text-align: center;
       padding: 3rem 1.5rem;
@@ -463,6 +587,7 @@
     <div class="hat-icon">🗽</div>
     <div class="site-title">New York <span>Yankees</span></div>
     <div class="site-date" id="today-label"></div>
+    <div class="stat-bar" id="stat-bar"></div>
   </header>
 
   <div class="container" id="app">
@@ -711,13 +836,124 @@
         </div>`;
     }
 
+    async function getUpcoming() {
+      const start = new Date(); start.setDate(start.getDate() + 1);
+      const end   = new Date(); end.setDate(end.getDate() + 14);
+      const data  = await fetchJSON(
+        `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}` +
+        `&startDate=${start.toISOString().slice(0,10)}&endDate=${end.toISOString().slice(0,10)}`
+      );
+      const games = [];
+      for (const d of (data.dates || [])) {
+        for (const g of d.games) {
+          if (g.status.abstractGameState !== 'Final') {
+            games.push(g);
+            if (games.length === 5) return games;
+          }
+        }
+      }
+      return games;
+    }
+
+    async function getStandings() {
+      // AL East division ID = 201
+      const year = new Date().getFullYear();
+      const data = await fetchJSON(
+        `https://statsapi.mlb.com/api/v1/standings?leagueId=103&season=${year}&standingsTypes=regularSeason&hydrate=team`
+      );
+      const alEast = (data.records || []).find(r => r.division?.id === 201);
+      return alEast?.teamRecords || [];
+    }
+
+    function buildUpcomingCard(games) {
+      if (!games.length) return '';
+      const rows = games.map(g => {
+        const isHome  = g.teams.home.team.id === YANKEES_ID;
+        const oppTeam = isHome ? g.teams.away : g.teams.home;
+        const date    = new Date(g.gameDate);
+        const dateStr = date.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+        const timeStr = date.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+        return `
+          <div class="upcoming-row">
+            <div class="upcoming-date">${dateStr}</div>
+            <div class="upcoming-ha">${isHome ? 'vs' : '@'}</div>
+            <div class="upcoming-opp">${oppTeam.team.name}</div>
+            <div class="upcoming-time">${timeStr}</div>
+          </div>`;
+      });
+      return `
+        <div class="card">
+          <div class="card-header"><div class="card-header-dot"></div><div class="card-label">Upcoming Games</div></div>
+          <div class="card-body" style="padding:0.75rem 0.5rem">
+            <div class="upcoming-list">${rows.join('')}</div>
+          </div>
+        </div>`;
+    }
+
+    function buildStandingsCard(teams) {
+      if (!teams.length) return '';
+      const sorted = [...teams].sort((a,b) => a.divisionRank - b.divisionRank);
+      const rows = sorted.map(t => {
+        const isYankees = t.team.id === YANKEES_ID;
+        const gb = t.gamesBack === '-' ? '<span class="gb-dash">—</span>' : t.gamesBack;
+        const pct = parseFloat(t.winningPercentage).toFixed(3).replace(/^0/, '');
+        return `
+          <tr class="${isYankees ? 'yankees-row' : ''}">
+            <td>${isYankees ? '★ ' : ''}${abbr(t.team.name)}</td>
+            <td>${t.wins}</td>
+            <td>${t.losses}</td>
+            <td>${pct}</td>
+            <td>${gb}</td>
+          </tr>`;
+      });
+      return `
+        <div class="card">
+          <div class="card-header"><div class="card-header-dot"></div><div class="card-label">AL East Standings</div></div>
+          <div class="card-body">
+            <table class="standings-table">
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>W</th>
+                  <th>L</th>
+                  <th>PCT</th>
+                  <th>GB</th>
+                </tr>
+              </thead>
+              <tbody>${rows.join('')}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function injectStatBar(todayGame) {
+      // Pull record from today's game data if available
+      const yankTeam = todayGame
+        ? (todayGame.teams.home.team.id === YANKEES_ID ? todayGame.teams.home : todayGame.teams.away)
+        : null;
+      const rec = yankTeam?.leagueRecord || yankTeam?.team?.record?.leagueRecord;
+      if (!rec) return;
+      const w = rec.wins, l = rec.losses;
+      const pct = (w / (w + l || 1)).toFixed(3).replace(/^0/, '');
+      document.getElementById('stat-bar').innerHTML = `
+        <div class="stat-chip"><strong>${w}–${l}</strong> Record</div>
+        <div class="stat-chip"><strong>${pct}</strong> Win %</div>`;
+    }
+
     let refreshTimer = null;
 
     async function main() {
       const app = document.getElementById('app');
       try {
-        const [todayGame, last10] = await Promise.all([getTodayGame(), getLast10()]);
-        app.innerHTML = buildGameCard(todayGame) + buildLast10Card(last10);
+        const [todayGame, last10, upcoming, standings] = await Promise.all([
+          getTodayGame(), getLast10(), getUpcoming(), getStandings()
+        ]);
+        injectStatBar(todayGame);
+        app.innerHTML =
+          buildGameCard(todayGame) +
+          buildUpcomingCard(upcoming) +
+          buildLast10Card(last10) +
+          buildStandingsCard(standings);
         if (todayGame?.status.abstractGameState === 'Live') {
           clearTimeout(refreshTimer);
           refreshTimer = setTimeout(main, 30000);
