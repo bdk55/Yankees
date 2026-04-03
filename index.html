@@ -738,8 +738,9 @@
           : `<div class="status-pill scheduled">${fmtTime(game.gameDate)}</div>`;
 
       const allBroadcasts = game.broadcasts || [];
-      const tvBroadcasts    = allBroadcasts.filter(b => b.type !== 'Radio' && b.name);
-      const radioBroadcasts = allBroadcasts.filter(b => b.type === 'Radio' && b.name);
+      const RADIO_TYPES = new Set(['AM', 'FM', 'XM', 'Radio']);
+      const tvBroadcasts    = allBroadcasts.filter(b => b.name && !RADIO_TYPES.has(b.type));
+      const radioBroadcasts = allBroadcasts.filter(b => b.name && RADIO_TYPES.has(b.type));
 
       const renderLinks = (list, urlMap) => list.length
         ? list.map(b => {
