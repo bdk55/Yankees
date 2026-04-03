@@ -673,6 +673,15 @@
       'MLB Network': 'https://www.mlb.com/network',
     };
 
+    const RADIO_URLS = {
+      'WFAN':           'https://www.audacy.com/wfan',
+      'WFAN 660':       'https://www.audacy.com/wfan',
+      'ESPN Radio':     'https://www.espn.com/radio',
+      'ESPN Deportes':  'https://www.espndeportes.com',
+      'MLB Network Radio': 'https://www.mlb.com/network/radio',
+      'SiriusXM':       'https://www.siriusxm.com/mlb-network-radio',
+    };
+
     function abbr(name) {
       const map = {
         'New York Yankees':'NYY','Boston Red Sox':'BOS','Tampa Bay Rays':'TB',
@@ -728,13 +737,19 @@
           ? `<div class="status-pill final">Final</div>`
           : `<div class="status-pill scheduled">${fmtTime(game.gameDate)}</div>`;
 
-      const broadcasts = (game.broadcasts || []).map(b => b.name).filter(Boolean);
-      const tvLinks = broadcasts.length
-        ? broadcasts.map(name => {
-            const url = Object.entries(BROADCAST_URLS).find(([k]) => name.includes(k))?.[1];
-            return url ? `<a href="${url}" class="broadcast-link">${name}</a>` : `<span>${name}</span>`;
+      const allBroadcasts = game.broadcasts || [];
+      const tvBroadcasts    = allBroadcasts.filter(b => b.type !== 'Radio' && b.name);
+      const radioBroadcasts = allBroadcasts.filter(b => b.type === 'Radio' && b.name);
+
+      const renderLinks = (list, urlMap) => list.length
+        ? list.map(b => {
+            const url = Object.entries(urlMap).find(([k]) => b.name.includes(k))?.[1];
+            return url ? `<a href="${url}" class="broadcast-link">${b.name}</a>` : `<span>${b.name}</span>`;
           }).join('<span style="color:var(--muted)"> · </span>')
-        : 'TBD';
+        : null;
+
+      const tvLinks    = renderLinks(tvBroadcasts, BROADCAST_URLS) || 'TBD';
+      const radioLinks = renderLinks(radioBroadcasts, RADIO_URLS);
 
       const venue    = game.venue?.name || '—';
       const homeAway = isHome ? 'Home' : 'Away';
@@ -783,6 +798,11 @@
                 <div class="meta-key">Watch</div>
                 <div class="meta-val" style="display:flex;flex-wrap:wrap;gap:0.3rem 0.6rem;">${tvLinks}</div>
               </div>
+              ${radioLinks ? `
+              <div class="meta-cell full">
+                <div class="meta-key">Listen</div>
+                <div class="meta-val" style="display:flex;flex-wrap:wrap;gap:0.3rem 0.6rem;">${radioLinks}</div>
+              </div>` : ''}
             </div>
           </div>
         </div>
