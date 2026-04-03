@@ -756,8 +756,12 @@
           }).join('<span style="color:var(--muted)"> · </span>')
         : null;
 
-      const tvLinks    = renderLinks(tvBroadcasts, BROADCAST_URLS) || 'TBD';
-      const radioLinks = renderLinks(radioBroadcasts, RADIO_URLS);
+      const tvLinks = renderLinks(tvBroadcasts, BROADCAST_URLS) || 'TBD';
+
+      // SiriusXM covers every MLB game — always show it
+      const siriusLink = `<a href="https://www.siriusxm.com/mlb-network-radio" class="broadcast-link">SiriusXM MLB Network Radio</a>`;
+      const apiRadioLinks = renderLinks(radioBroadcasts, RADIO_URLS);
+      const radioLinks = apiRadioLinks ? `${siriusLink}<span style="color:var(--muted)"> · </span>${apiRadioLinks}` : siriusLink;
 
       const venue    = game.venue?.name || '—';
       const homeAway = isHome ? 'Home' : 'Away';
@@ -806,11 +810,10 @@
                 <div class="meta-key">Watch</div>
                 <div class="meta-val" style="display:flex;flex-wrap:wrap;gap:0.3rem 0.6rem;">${tvLinks}</div>
               </div>
-              ${radioLinks ? `
               <div class="meta-cell full">
                 <div class="meta-key">Listen</div>
                 <div class="meta-val" style="display:flex;flex-wrap:wrap;gap:0.3rem 0.6rem;">${radioLinks}</div>
-              </div>` : ''}
+              </div>
             </div>
           </div>
         </div>
