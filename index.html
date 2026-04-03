@@ -674,12 +674,19 @@
     };
 
     const RADIO_URLS = {
-      'WFAN':           'https://www.audacy.com/wfan',
-      'WFAN 660':       'https://www.audacy.com/wfan',
-      'ESPN Radio':     'https://www.espn.com/radio',
-      'ESPN Deportes':  'https://www.espndeportes.com',
-      'MLB Network Radio': 'https://www.mlb.com/network/radio',
-      'SiriusXM':       'https://www.siriusxm.com/mlb-network-radio',
+      // WFAN — opens Audacy app if installed
+      'WFAN':              'https://audacy.com/wfan',
+      'WFAN 660':          'https://audacy.com/wfan',
+      'WFAN 101.9':        'https://audacy.com/wfan',
+      // ESPN Radio — opens ESPN app if installed
+      'ESPN Radio':        'https://www.espn.com/radio',
+      'ESPN Deportes':     'https://www.espndeportes.com/radio',
+      // SiriusXM — opens SiriusXM app if installed
+      'SiriusXM':          'https://www.siriusxm.com/mlb-network-radio',
+      'MLB Network Radio': 'https://www.siriusxm.com/mlb-network-radio',
+      // iHeartRadio fallback — opens iHeart app
+      'WCBS':              'https://www.iheart.com/live/wcbs-880-452/',
+      'WABC':              'https://www.iheart.com/live/wabc-770-am-452/',
     };
 
     function abbr(name) {
