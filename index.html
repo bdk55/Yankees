@@ -732,9 +732,9 @@
 
       const centerCol = (isLive || isFinal)
         ? `<div class="score-display">
-             <div class="score-digit">${yankRuns}</div>
+             <div class="score-digit">${isHome ? oppRuns : yankRuns}</div>
              <div class="score-dash">–</div>
-             <div class="score-digit">${oppRuns}</div>
+             <div class="score-digit">${isHome ? yankRuns : oppRuns}</div>
            </div>`
         : `<div class="vs-text">VS</div>`;
 
@@ -777,25 +777,32 @@
              <div class="pitcher-name" style="color:var(--muted)">TBD</div>
            </div>`;
 
+      const yankeeTeamDiv = `
+              <div class="team">
+                <div class="team-abbr nyy">NYY</div>
+                <div class="team-full">New York Yankees</div>
+                <div class="team-record">${yankRec}</div>
+              </div>`;
+      const oppTeamDiv = `
+              <div class="team">
+                <div class="team-abbr opp">${oppAbbr}</div>
+                <div class="team-full">${oppName}</div>
+                <div class="team-record">${oppRec}</div>
+              </div>`;
+      const leftTeam  = isHome ? oppTeamDiv  : yankeeTeamDiv;
+      const rightTeam = isHome ? yankeeTeamDiv : oppTeamDiv;
+
       return `
         <div class="card">
           <div class="card-header"><div class="card-header-dot"></div><div class="card-label">Today's Game</div></div>
           <div class="card-body">
             <div class="matchup">
-              <div class="team">
-                <div class="team-abbr nyy">NYY</div>
-                <div class="team-full">New York Yankees</div>
-                <div class="team-record">${yankRec}</div>
-              </div>
+              ${leftTeam}
               <div class="vs-col">
                 ${centerCol}
                 ${statusPill}
               </div>
-              <div class="team">
-                <div class="team-abbr opp">${oppAbbr}</div>
-                <div class="team-full">${oppName}</div>
-                <div class="team-record">${oppRec}</div>
-              </div>
+              ${rightTeam}
             </div>
             <div class="meta-grid">
               <div class="meta-cell">
