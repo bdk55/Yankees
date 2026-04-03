@@ -682,8 +682,8 @@
       'ESPN Radio':        'https://www.espn.com/radio',
       'ESPN Deportes':     'https://www.espndeportes.com/radio',
       // SiriusXM — opens SiriusXM app if installed
-      'SiriusXM':          'https://www.siriusxm.com/mlb-network-radio',
-      'MLB Network Radio': 'https://www.siriusxm.com/mlb-network-radio',
+      'SiriusXM':          'https://siriusxm.com/player/channel-linear/entity/21fd583e-8f6a-b869-4f75-9e8a3f604eb0',
+      'MLB Network Radio': 'https://siriusxm.com/player/channel-linear/entity/21fd583e-8f6a-b869-4f75-9e8a3f604eb0',
       // iHeartRadio fallback — opens iHeart app
       'WCBS':              'https://www.iheart.com/live/wcbs-880-452/',
       'WABC':              'https://www.iheart.com/live/wabc-770-am-452/',
@@ -759,7 +759,7 @@
       const tvLinks = renderLinks(tvBroadcasts, BROADCAST_URLS) || 'TBD';
 
       // SiriusXM covers every MLB game — always show it
-      const siriusLink = `<a href="https://www.siriusxm.com/mlb-network-radio" class="broadcast-link">SiriusXM MLB Network Radio</a>`;
+      const siriusLink = `<a href="https://siriusxm.com/player/channel-linear/entity/21fd583e-8f6a-b869-4f75-9e8a3f604eb0" class="broadcast-link">SiriusXM Yankees</a>`;
       const apiRadioLinks = renderLinks(radioBroadcasts, RADIO_URLS);
       const radioLinks = apiRadioLinks ? `${siriusLink}<span style="color:var(--muted)"> · </span>${apiRadioLinks}` : siriusLink;
 
