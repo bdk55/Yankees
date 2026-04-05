@@ -604,7 +604,7 @@
     <div class="site-title">New York <span>Yankees</span></div>
     <div class="site-date" id="today-label"></div>
     <div class="stat-bar" id="stat-bar"></div>
-    <button class="refresh-btn" onclick="main()">↻ Refresh</button>
+    <button class="refresh-btn">↻ Refresh</button>
   </header>
 
   <div class="container" id="app">
@@ -1025,6 +1025,7 @@
       }
     }
 
+    document.querySelector('.refresh-btn').addEventListener('click', main);
     main();
   </script>
 </body>
