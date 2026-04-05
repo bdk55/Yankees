@@ -643,12 +643,25 @@
     }
 
     async function getTodayGame() {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
       const data = await fetchJSON(
         `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}&date=${today}&hydrate=probablePitcher,broadcasts,linescore,team(record)`
       );
       const dates = data.dates || [];
-      return dates.length && dates[0].games.length ? dates[0].games[0] : null;
+      if (!dates.length || !dates[0].games.length) return null;
+      const game = dates[0].games[0];
+
+      // For live games, fetch the dedicated linescore endpoint for up-to-date scores
+      const state  = game.status.abstractGameState;
+      const detail = game.status.detailedState || '';
+      const isLive = state === 'Live' || detail.includes('Progress') || detail.includes('Delay');
+      if (isLive) {
+        try {
+          const ls = await fetchJSON(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/linescore`);
+          game.linescore = ls;
+        } catch (e) { /* fall back to schedule linescore */ }
+      }
+      return game;
     }
 
     async function getLast10() {
@@ -656,7 +669,7 @@
       const start = new Date(); start.setDate(start.getDate() - 30);
       const data = await fetchJSON(
         `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}` +
-        `&startDate=${start.toISOString().slice(0,10)}&endDate=${end.toISOString().slice(0,10)}&hydrate=linescore`
+        `&startDate=${start.toLocaleDateString('en-CA', {timeZone:'America/New_York'})}&endDate=${end.toLocaleDateString('en-CA', {timeZone:'America/New_York'})}&hydrate=linescore`
       );
       const games = [];
       for (const d of (data.dates || []).reverse()) {
@@ -898,7 +911,7 @@
       const end   = new Date(); end.setDate(end.getDate() + 14);
       const data  = await fetchJSON(
         `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${YANKEES_ID}` +
-        `&startDate=${start.toISOString().slice(0,10)}&endDate=${end.toISOString().slice(0,10)}`
+        `&startDate=${start.toLocaleDateString('en-CA', {timeZone:'America/New_York'})}&endDate=${end.toLocaleDateString('en-CA', {timeZone:'America/New_York'})}`
       );
       const games = [];
       for (const d of (data.dates || [])) {
@@ -1025,7 +1038,14 @@
       }
     }
 
-    document.querySelector('.refresh-btn').addEventListener('click', main);
+    const refreshBtn = document.querySelector('.refresh-btn');
+    refreshBtn.addEventListener('click', async () => {
+      refreshBtn.textContent = '↻ Refreshing…';
+      refreshBtn.disabled = true;
+      await main();
+      refreshBtn.textContent = '↻ Refresh';
+      refreshBtn.disabled = false;
+    });
     main();
   </script>
 </body>
