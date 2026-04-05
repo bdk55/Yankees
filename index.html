@@ -615,7 +615,7 @@
 
     function fmtTime(datetime) {
       return new Date(datetime).toLocaleTimeString('en-US', {
-        hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+        hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: 'America/New_York'
       });
     }
 
@@ -910,7 +910,7 @@
         const oppTeam = isHome ? g.teams.away : g.teams.home;
         const date    = new Date(g.gameDate);
         const dateStr = date.toLocaleDateString('en-US', { month:'short', day:'numeric' });
-        const timeStr = date.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+        const timeStr = date.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/New_York' });
         return `
           <div class="upcoming-row">
             <div class="upcoming-date">${dateStr}</div>
