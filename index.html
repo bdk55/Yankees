@@ -1,1 +1,34 @@
-placeholder
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NY Yankees</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="hat-icon">🗽</div>
+    <div class="site-title">New York <span>Yankees</span></div>
+    <div class="site-date" id="today-label"></div>
+    <div class="stat-bar" id="stat-bar"></div>
+    <button class="refresh-btn">↻ Refresh</button>
+  </header>
+
+  <div class="container" id="app">
+    <div class="card">
+      <div class="state-box">
+        <div class="spinner"></div>
+        <div class="state-text">Loading game data…</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">MLB Stats API &nbsp;·&nbsp; Live data</footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
