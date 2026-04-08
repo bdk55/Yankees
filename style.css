@@ -626,3 +626,143 @@
       text-transform: uppercase;
       color: var(--muted);
     }
+
+    /* ─── Live Detail Panel ─────────────────────────────────────────────────── */
+
+    .live-detail {
+      margin-top: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+    .live-detail summary { list-style: none; }
+    .live-detail summary::-webkit-details-marker { display: none; }
+
+    .live-detail-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .live-detail-summary:active { background: rgba(255,255,255,0.05); }
+
+    .live-detail-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .live-detail-chevron {
+      font-size: 0.75rem;
+      color: var(--muted);
+      transition: transform 0.2s ease;
+    }
+    details[open] .live-detail-chevron { transform: rotate(180deg); }
+
+    .live-detail-body {
+      padding: 0.75rem 0.9rem 0.9rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    details[open] .live-detail-body {
+      animation: detailFadeIn 0.18s ease;
+    }
+    @keyframes detailFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Diamond + Count row */
+    .live-detail-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .live-detail-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    /* Base diamond — rotated squares, no images */
+    .base-diamond { display: flex; align-items: center; }
+    .base-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .base-row  { display: flex; align-items: center; gap: 4px; }
+    .base {
+      width: 16px; height: 16px;
+      transform: rotate(45deg);
+      border: 1.5px solid rgba(168,184,200,0.35);
+      border-radius: 2px;
+      background: transparent;
+      flex-shrink: 0;
+    }
+    .base.on { background: #a8b8c8; border-color: #a8b8c8; }
+    .base-home {
+      width: 14px; height: 14px;
+      background: rgba(168,184,200,0.12);
+      border: 1.5px solid rgba(168,184,200,0.28);
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+      flex-shrink: 0;
+    }
+
+    /* Count pips */
+    .count-grid {
+      display: grid;
+      grid-template-columns: 0.75rem 1fr;
+      row-gap: 5px;
+      column-gap: 6px;
+      align-items: center;
+    }
+    .count-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .count-pips { display: flex; gap: 4px; align-items: center; }
+    .count-pip {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(168,184,200,0.35);
+      background: transparent;
+      flex-shrink: 0;
+    }
+    .count-pip.ball.on   { background: var(--win);  border-color: var(--win); }
+    .count-pip.strike.on { background: var(--loss); border-color: var(--loss); }
+
+    /* Player names row */
+    .live-detail-players {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .live-player-name {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.25;
+      overflow-wrap: break-word;
+    }
+
+    /* H / E line */
+    .live-he-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .live-he-val {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.8rem;
+      color: var(--white);
+      margin-right: 0.6rem;
+      font-variant-numeric: tabular-nums;
+    }

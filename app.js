@@ -104,6 +104,64 @@ const YANKEES_ID = 147;
       return map[name] || name.split(' ').pop().slice(0,3).toUpperCase();
     }
 
+    function buildLiveDetail(ls) {
+      if (!ls || !ls.offense || !ls.defense?.pitcher) return '';
+      const onFirst  = !!ls.offense?.first;
+      const onSecond = !!ls.offense?.second;
+      const onThird  = !!ls.offense?.third;
+      const balls    = ls.balls   ?? 0;
+      const strikes  = ls.strikes ?? 0;
+      const batter   = ls.offense?.batter?.fullName  || '\u2014';
+      const onDeck   = ls.offense?.onDeck?.fullName  || '\u2014';
+      const pitcher  = ls.defense?.pitcher?.fullName || '\u2014';
+      const awayHits = ls.teams?.away?.hits  ?? '\u2014';
+      const homeHits = ls.teams?.home?.hits  ?? '\u2014';
+      const awayErr  = ls.teams?.away?.errors ?? '\u2014';
+      const homeErr  = ls.teams?.home?.errors ?? '\u2014';
+      const pips = (count, max, cls) => Array.from({length: max}, (_,i) =>
+        `<div class="count-pip ${cls}${i < count ? ' on' : ''}"></div>`).join('');
+      return `
+        <details class="live-detail">
+          <summary class="live-detail-summary">
+            <span class="live-detail-label">Game Situation</span>
+            <span class="live-detail-chevron">\u25be</span>
+          </summary>
+          <div class="live-detail-body">
+            <div class="live-detail-row">
+              <div class="live-detail-cell">
+                <div class="meta-key">Runners</div>
+                <div class="base-diamond">
+                  <div class="base-wrap">
+                    <div class="base second${onSecond ? ' on' : ''}"></div>
+                    <div class="base-row">
+                      <div class="base third${onThird ? ' on' : ''}"></div>
+                      <div class="base-home"></div>
+                      <div class="base first${onFirst ? ' on' : ''}"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="live-detail-cell">
+                <div class="meta-key">Count</div>
+                <div class="count-grid">
+                  <div class="count-label">B</div><div class="count-pips">${pips(balls, 4, 'ball')}</div>
+                  <div class="count-label">S</div><div class="count-pips">${pips(strikes, 3, 'strike')}</div>
+                </div>
+              </div>
+            </div>
+            <div class="live-detail-players">
+              <div class="live-detail-cell"><div class="meta-key">Batter</div><div class="live-player-name">${batter}</div></div>
+              <div class="live-detail-cell"><div class="meta-key">On Deck</div><div class="live-player-name">${onDeck}</div></div>
+              <div class="live-detail-cell"><div class="meta-key">Pitching</div><div class="live-player-name">${pitcher}</div></div>
+            </div>
+            <div class="live-he-row">
+              <span class="meta-key">H</span><span class="live-he-val">${awayHits}\u2013${homeHits}</span>
+              <span class="meta-key">E</span><span class="live-he-val">${awayErr}\u2013${homeErr}</span>
+            </div>
+          </div>
+        </details>`;
+    }
+
     function buildGameCard(game) {
       if (!game) {
         return `<div class="card"><div class="state-box"><div class="state-text">No Yankees game scheduled today.</div></div></div>`;
@@ -161,12 +219,14 @@ const YANKEES_ID = 147;
       const oppTeamDiv = `<div class="team"><div class="team-abbr opp">${oppAbbr}</div><div class="team-full">${oppName}</div><div class="team-record">${oppRec}</div></div>`;
       const leftTeam  = isHome ? oppTeamDiv  : yankeeTeamDiv;
       const rightTeam = isHome ? yankeeTeamDiv : oppTeamDiv;
+      const liveDetail = isLive ? buildLiveDetail(ls) : '';
       return `
         <div class="card">
           <div class="card-header"><div class="card-header-dot"></div><div class="card-label">Today's Game</div></div>
           <div class="card-body">
             <div class="matchup">${leftTeam}<div class="vs-col">${centerCol}${statusPill}</div>${rightTeam}</div>
             ${challengeRow}
+            ${liveDetail}
             <div class="meta-grid">
               <div class="meta-cell"><div class="meta-key">First Pitch</div><div class="meta-val">${fmtTime(game.gameDate)}</div></div>
               <div class="meta-cell"><div class="meta-key">Venue</div><div class="meta-val">${homeAway} \u00b7 ${venue}</div></div>
@@ -280,5 +340,5 @@ const YANKEES_ID = 147;
     }
 
     if (typeof module !== 'undefined') {
-      module.exports = { fmt, fmtTime, abbr, buildGameCard, buildLast10Card, buildUpcomingCard, buildStandingsCard, injectStatBar, BROADCAST_URLS, RADIO_URLS, YANKEES_ID };
+      module.exports = { fmt, fmtTime, abbr, buildGameCard, buildLast10Card, buildUpcomingCard, buildStandingsCard, injectStatBar, buildLiveDetail, BROADCAST_URLS, RADIO_URLS, YANKEES_ID };
     }

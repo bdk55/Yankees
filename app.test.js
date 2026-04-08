@@ -7,6 +7,7 @@ const {
   buildUpcomingCard,
   buildStandingsCard,
   injectStatBar,
+  buildLiveDetail,
   BROADCAST_URLS,
   RADIO_URLS,
   YANKEES_ID,
@@ -623,5 +624,185 @@ describe('RADIO_URLS', () => {
   test('contains SiriusXM entry', () => {
     expect(RADIO_URLS['SiriusXM']).toBeDefined();
     expect(RADIO_URLS['MLB Network Radio']).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildLiveDetail
+// ---------------------------------------------------------------------------
+
+function makeLinescore(overrides = {}) {
+  return {
+    balls: 2,
+    strikes: 1,
+    outs: 1,
+    offense: {
+      batter:  { fullName: 'Aaron Judge' },
+      onDeck:  { fullName: 'Juan Soto' },
+      first:   { id: 1 },
+      second:  undefined,
+      third:   undefined,
+    },
+    defense: {
+      pitcher: { fullName: 'Gerrit Cole' },
+    },
+    teams: {
+      home: { hits: 5, errors: 0 },
+      away: { hits: 3, errors: 1 },
+    },
+    ...overrides,
+  };
+}
+
+describe('buildLiveDetail', () => {
+  test('returns empty string when ls is null', () => {
+    expect(buildLiveDetail(null)).toBe('');
+  });
+
+  test('returns empty string when ls is empty object', () => {
+    expect(buildLiveDetail({})).toBe('');
+  });
+
+  test('returns empty string when offense is missing', () => {
+    expect(buildLiveDetail({ defense: { pitcher: { fullName: 'X' } } })).toBe('');
+  });
+
+  test('returns empty string when defense.pitcher is missing', () => {
+    expect(buildLiveDetail({ offense: { batter: { fullName: 'X' } } })).toBe('');
+  });
+
+  test('returns non-empty HTML string for valid linescore', () => {
+    const html = buildLiveDetail(makeLinescore());
+    expect(typeof html).toBe('string');
+    expect(html.length).toBeGreaterThan(0);
+  });
+
+  test('uses <details> and <summary> elements', () => {
+    const html = buildLiveDetail(makeLinescore());
+    expect(html).toContain('<details');
+    expect(html).toContain('<summary');
+  });
+
+  test('shows batter name', () => {
+    const html = buildLiveDetail(makeLinescore());
+    expect(html).toContain('Aaron Judge');
+  });
+
+  test('shows on-deck name', () => {
+    const html = buildLiveDetail(makeLinescore());
+    expect(html).toContain('Juan Soto');
+  });
+
+  test('shows pitcher name', () => {
+    const html = buildLiveDetail(makeLinescore());
+    expect(html).toContain('Gerrit Cole');
+  });
+
+  test('shows correct number of ball pips (max 4)', () => {
+    const html = buildLiveDetail(makeLinescore({ balls: 3 }));
+    const ballPips = (html.match(/count-pip ball/g) || []).length;
+    expect(ballPips).toBe(4);
+  });
+
+  test('marks correct number of filled ball pips', () => {
+    const html = buildLiveDetail(makeLinescore({ balls: 3 }));
+    const filledBalls = (html.match(/count-pip ball on/g) || []).length;
+    expect(filledBalls).toBe(3);
+  });
+
+  test('shows correct number of strike pips (max 3)', () => {
+    const html = buildLiveDetail(makeLinescore({ strikes: 2 }));
+    const strikePips = (html.match(/count-pip strike/g) || []).length;
+    expect(strikePips).toBe(3);
+  });
+
+  test('marks correct number of filled strike pips', () => {
+    const html = buildLiveDetail(makeLinescore({ strikes: 2 }));
+    const filledStrikes = (html.match(/count-pip strike on/g) || []).length;
+    expect(filledStrikes).toBe(2);
+  });
+
+  test('first base square has "on" class when runner on first', () => {
+    const html = buildLiveDetail(makeLinescore({ offense: {
+      batter:  { fullName: 'A' },
+      onDeck:  { fullName: 'B' },
+      first:   { id: 99 },
+      second:  undefined,
+      third:   undefined,
+    }}));
+    expect(html).toContain('base first on');
+  });
+
+  test('first base square does NOT have "on" class when base is empty', () => {
+    const ls = makeLinescore();
+    ls.offense.first = undefined;
+    const html = buildLiveDetail(ls);
+    expect(html).not.toContain('base first on');
+    expect(html).toContain('base first');
+  });
+
+  test('second base square has "on" class when runner on second', () => {
+    const ls = makeLinescore();
+    ls.offense.second = { id: 7 };
+    const html = buildLiveDetail(ls);
+    expect(html).toContain('base second on');
+  });
+
+  test('third base square has "on" class when runner on third', () => {
+    const ls = makeLinescore();
+    ls.offense.third = { id: 5 };
+    const html = buildLiveDetail(ls);
+    expect(html).toContain('base third on');
+  });
+
+  test('bases loaded: all three base squares have "on" class', () => {
+    const ls = makeLinescore({
+      offense: {
+        batter:  { fullName: 'A' },
+        onDeck:  { fullName: 'B' },
+        first:   { id: 1 },
+        second:  { id: 2 },
+        third:   { id: 3 },
+      },
+    });
+    const html = buildLiveDetail(ls);
+    expect(html).toContain('base first on');
+    expect(html).toContain('base second on');
+    expect(html).toContain('base third on');
+  });
+
+  test('bases empty: no base square has "on" class', () => {
+    const ls = makeLinescore({
+      offense: {
+        batter:  { fullName: 'A' },
+        onDeck:  { fullName: 'B' },
+        first:   undefined,
+        second:  undefined,
+        third:   undefined,
+      },
+    });
+    const html = buildLiveDetail(ls);
+    expect(html).not.toContain('base first on');
+    expect(html).not.toContain('base second on');
+    expect(html).not.toContain('base third on');
+  });
+
+  test('falls back to em dash for missing batter name', () => {
+    const ls = makeLinescore();
+    ls.offense.batter = undefined;
+    const html = buildLiveDetail(ls);
+    expect(html).toContain('\u2014');
+  });
+
+  test('count 0-0 produces no filled pips', () => {
+    const html = buildLiveDetail(makeLinescore({ balls: 0, strikes: 0 }));
+    expect(html).not.toContain('pip ball on');
+    expect(html).not.toContain('pip strike on');
+  });
+
+  test('full count 3-2 marks 3 balls and 2 strikes as filled', () => {
+    const html = buildLiveDetail(makeLinescore({ balls: 3, strikes: 2 }));
+    expect((html.match(/count-pip ball on/g) || []).length).toBe(3);
+    expect((html.match(/count-pip strike on/g) || []).length).toBe(2);
   });
 });
