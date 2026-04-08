@@ -223,7 +223,7 @@ const YANKEES_ID = 147;
         const isHome  = g.teams.home.team.id === YANKEES_ID;
         const oppTeam = isHome ? g.teams.away : g.teams.home;
         const date    = new Date(g.gameDate);
-        const dateStr = date.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        const dateStr = date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
         const timeStr = date.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'});
         return `<div class="upcoming-row"><div class="upcoming-date">${dateStr}</div><div class="upcoming-ha">${isHome?'vs':'@'}</div><div class="upcoming-opp">${oppTeam.team.name}</div><div class="upcoming-time">${timeStr}</div></div>`;
       });
