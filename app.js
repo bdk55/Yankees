@@ -1,9 +1,5 @@
 const YANKEES_ID = 147;
 
-    // Set date label
-    document.getElementById('today-label').textContent =
-      new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-
     function fmt(dateStr) {
       const [y, m, d] = dateStr.split('-').map(Number);
       return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -255,6 +251,8 @@ const YANKEES_ID = 147;
 
     async function main() {
       const app = document.getElementById('app');
+      const dateLabel = document.getElementById('today-label');
+      if (dateLabel) dateLabel.textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
       try {
         const [todayGame,last10,upcoming,standings] = await Promise.all([getTodayGame(),getLast10(),getUpcoming(),getStandings()]);
         injectStatBar(todayGame);
@@ -269,12 +267,18 @@ const YANKEES_ID = 147;
       }
     }
 
-    const refreshBtn = document.querySelector('.refresh-btn');
-    refreshBtn.addEventListener('click', async () => {
-      refreshBtn.textContent = '\u21bb Refreshing\u2026';
-      refreshBtn.disabled = true;
-      await main();
-      refreshBtn.textContent = '\u21bb Refresh';
-      refreshBtn.disabled = false;
-    });
-    main();
+    if (typeof module === 'undefined') {
+      const refreshBtn = document.querySelector('.refresh-btn');
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.textContent = '\u21bb Refreshing\u2026';
+        refreshBtn.disabled = true;
+        await main();
+        refreshBtn.textContent = '\u21bb Refresh';
+        refreshBtn.disabled = false;
+      });
+      main();
+    }
+
+    if (typeof module !== 'undefined') {
+      module.exports = { fmt, fmtTime, abbr, buildGameCard, buildLast10Card, buildUpcomingCard, buildStandingsCard, injectStatBar, BROADCAST_URLS, RADIO_URLS, YANKEES_ID };
+    }
