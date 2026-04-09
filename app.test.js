@@ -806,9 +806,9 @@ describe('buildLiveDetail', () => {
     expect((html.match(/count-pip strike on/g) || []).length).toBe(2);
   });
 
-  test('label reads "At the Plate"', () => {
+  test('label reads "Live Game"', () => {
     const html = buildLiveDetail(makeLinescore());
-    expect(html).toContain('At the Plate');
+    expect(html).toContain('Live Game');
   });
 
   // Scoring plays

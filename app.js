@@ -170,7 +170,7 @@ const YANKEES_ID = 147;
       return `
         <details class="live-detail">
           <summary class="live-detail-summary">
-            <span class="live-detail-label">At the Plate</span>
+            <span class="live-detail-label">Live Game</span>
             <span class="live-detail-chevron">\u25be</span>
           </summary>
           <div class="live-detail-body">
