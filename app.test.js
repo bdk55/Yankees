@@ -855,12 +855,77 @@ describe('buildLiveDetail', () => {
 
   test('renders multiple scoring plays in order', () => {
     const plays = [
-      makeScoringPlay(3, true,  'Home Run',   'Aaron Judge',    1, 0),
-      makeScoringPlay(5, false, 'RBI Single', 'Rafael Devers',  1, 2),
-      makeScoringPlay(7, true,  'Sacrifice Fly', 'Juan Soto',   2, 2),
+      makeScoringPlay(3, true,  'Home Run',      'Aaron Judge',   1, 0),
+      makeScoringPlay(5, false, 'RBI Single',    'Rafael Devers', 1, 2),
+      makeScoringPlay(7, true,  'Sacrifice Fly', 'Juan Soto',     2, 2),
     ];
     const html = buildLiveDetail(makeLinescore(), plays);
     const rows = (html.match(/scoring-play-row/g) || []).length;
     expect(rows).toBe(3);
+  });
+
+  // Line score table
+  const makeLinescoreWithInnings = () => ({
+    ...makeLinescore(),
+    currentInning: 5,
+    innings: [
+      { num: 1, away: { runs: 0 }, home: { runs: 2 } },
+      { num: 2, away: { runs: 1 }, home: { runs: 0 } },
+      { num: 3, away: { runs: 0 }, home: { runs: 0 } },
+      { num: 4, away: { runs: 0 }, home: { runs: 0 } },
+      { num: 5, away: { runs: 1 } },          // home hasn't batted yet (top of 5th)
+    ],
+    teams: { away: { runs: 2, hits: 4, errors: 0 }, home: { runs: 2, hits: 5, errors: 1 } },
+  });
+
+  test('renders linescore-table element', () => {
+    const html = buildLiveDetail(makeLinescoreWithInnings(), [], { away: 'BOS', home: 'NYY' });
+    expect(html).toContain('linescore-table');
+  });
+
+  test('shows team abbreviations in the table', () => {
+    const html = buildLiveDetail(makeLinescoreWithInnings(), [], { away: 'BOS', home: 'NYY' });
+    expect(html).toContain('BOS');
+    expect(html).toContain('NYY');
+  });
+
+  test('shows inning column headers 1–9', () => {
+    const html = buildLiveDetail(makeLinescoreWithInnings(), [], { away: 'BOS', home: 'NYY' });
+    for (let i = 1; i <= 9; i++) {
+      expect(html).toContain(`<th class="ls-th-inn">${i}</th>`);
+    }
+  });
+
+  test('shows R H E column headers', () => {
+    const html = buildLiveDetail(makeLinescoreWithInnings(), [], { away: 'BOS', home: 'NYY' });
+    expect(html).toContain('>R<');
+    expect(html).toContain('>H<');
+    expect(html).toContain('>E<');
+  });
+
+  test('shows run totals from linescore teams', () => {
+    const html = buildLiveDetail(makeLinescoreWithInnings(), [], { away: 'BOS', home: 'NYY' });
+    // both teams have 2 runs
+    const rhe = html.match(/ls-rhe ls-sep[^>]*>(\d+)</g) || [];
+    expect(rhe.length).toBe(2);
+  });
+
+  test('empty inning cells for unplayed innings', () => {
+    const html = buildLiveDetail(makeLinescoreWithInnings(), [], { away: 'BOS', home: 'NYY' });
+    // Innings 6-9 haven't been played yet — cells should be empty
+    expect(html).toContain('<td class="ls-inn"></td>');
+  });
+
+  test('extends past 9 innings for extra-inning games', () => {
+    const ls = {
+      ...makeLinescore(),
+      currentInning: 11,
+      innings: Array.from({ length: 11 }, (_, i) => ({
+        num: i + 1, away: { runs: 0 }, home: { runs: 0 },
+      })),
+      teams: { away: { runs: 0, hits: 5, errors: 0 }, home: { runs: 0, hits: 4, errors: 0 } },
+    };
+    const html = buildLiveDetail(ls, [], { away: 'BOS', home: 'NYY' });
+    expect(html).toContain('<th class="ls-th-inn">11</th>');
   });
 });
