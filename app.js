@@ -33,6 +33,10 @@ const YANKEES_ID = 147;
           const ls = await fetchJSON(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/linescore`);
           game.linescore = ls;
         } catch (e) {}
+        try {
+          const pb = await fetchJSON(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/playByPlay`);
+          game.scoringPlays = (pb.allPlays || []).filter(p => p.about?.isScoringPlay);
+        } catch (e) {}
       }
       return game;
     }
@@ -104,7 +108,7 @@ const YANKEES_ID = 147;
       return map[name] || name.split(' ').pop().slice(0,3).toUpperCase();
     }
 
-    function buildLiveDetail(ls) {
+    function buildLiveDetail(ls, scoringPlays = []) {
       if (!ls || !ls.offense || !ls.defense?.pitcher) return '';
       const onFirst  = !!ls.offense?.first;
       const onSecond = !!ls.offense?.second;
@@ -120,10 +124,22 @@ const YANKEES_ID = 147;
       const homeErr  = ls.teams?.home?.errors ?? '\u2014';
       const pips = (count, max, cls) => Array.from({length: max}, (_,i) =>
         `<div class="count-pip ${cls}${i < count ? ' on' : ''}"></div>`).join('');
+      const scoringSection = scoringPlays.length ? `
+        <div class="scoring-plays">
+          <div class="meta-key" style="margin-bottom:0.35rem">Scoring Plays</div>
+          ${scoringPlays.map(p => {
+            const half = p.about?.isTopInning ? '\u25b2' : '\u25bc';
+            const inn  = p.about?.ordinalNum || '';
+            const desc = p.matchup?.batter?.fullName ? `${p.matchup.batter.fullName} \u2014 ${p.result?.event || ''}` : (p.result?.event || '');
+            const away = p.result?.awayScore ?? 0;
+            const home = p.result?.homeScore ?? 0;
+            return `<div class="scoring-play-row"><span class="sp-inning">${half} ${inn}</span><span class="sp-desc">${desc}</span><span class="sp-score">${away}\u2013${home}</span></div>`;
+          }).join('')}
+        </div>` : '';
       return `
         <details class="live-detail">
           <summary class="live-detail-summary">
-            <span class="live-detail-label">Game Situation</span>
+            <span class="live-detail-label">At the Plate</span>
             <span class="live-detail-chevron">\u25be</span>
           </summary>
           <div class="live-detail-body">
@@ -158,6 +174,7 @@ const YANKEES_ID = 147;
               <span class="meta-key">H</span><span class="live-he-val">${awayHits}\u2013${homeHits}</span>
               <span class="meta-key">E</span><span class="live-he-val">${awayErr}\u2013${homeErr}</span>
             </div>
+            ${scoringSection}
           </div>
         </details>`;
     }
@@ -219,7 +236,7 @@ const YANKEES_ID = 147;
       const oppTeamDiv = `<div class="team"><div class="team-abbr opp">${oppAbbr}</div><div class="team-full">${oppName}</div><div class="team-record">${oppRec}</div></div>`;
       const leftTeam  = isHome ? oppTeamDiv  : yankeeTeamDiv;
       const rightTeam = isHome ? yankeeTeamDiv : oppTeamDiv;
-      const liveDetail = isLive ? buildLiveDetail(ls) : '';
+      const liveDetail = isLive ? buildLiveDetail(ls, game.scoringPlays || []) : '';
       return `
         <div class="card">
           <div class="card-header"><div class="card-header-dot"></div><div class="card-label">Today's Game</div></div>

@@ -805,4 +805,62 @@ describe('buildLiveDetail', () => {
     expect((html.match(/count-pip ball on/g) || []).length).toBe(3);
     expect((html.match(/count-pip strike on/g) || []).length).toBe(2);
   });
+
+  test('label reads "At the Plate"', () => {
+    const html = buildLiveDetail(makeLinescore());
+    expect(html).toContain('At the Plate');
+  });
+
+  // Scoring plays
+  const makeScoringPlay = (inning, isTop, event, batter, away, home) => ({
+    about: { isScoringPlay: true, isTopInning: isTop, ordinalNum: `${inning}th` },
+    result: { event, awayScore: away, homeScore: home },
+    matchup: { batter: { fullName: batter } },
+  });
+
+  test('no scoring section when scoringPlays is empty', () => {
+    const html = buildLiveDetail(makeLinescore(), []);
+    expect(html).not.toContain('scoring-plays');
+  });
+
+  test('shows scoring section when plays are provided', () => {
+    const plays = [makeScoringPlay(3, true, 'Home Run', 'Aaron Judge', 1, 0)];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).toContain('scoring-plays');
+    expect(html).toContain('Scoring Plays');
+  });
+
+  test('renders batter name and event for each scoring play', () => {
+    const plays = [makeScoringPlay(3, true, 'Home Run', 'Aaron Judge', 1, 0)];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).toContain('Aaron Judge');
+    expect(html).toContain('Home Run');
+  });
+
+  test('renders score after each scoring play', () => {
+    const plays = [makeScoringPlay(3, true, 'Home Run', 'Aaron Judge', 1, 0)];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).toContain('1\u20130');
+  });
+
+  test('renders top inning with up arrow and bottom with down arrow', () => {
+    const plays = [
+      makeScoringPlay(3, true,  'Home Run',   'Aaron Judge',    1, 0),
+      makeScoringPlay(5, false, 'RBI Single', 'Rafael Devers',  1, 1),
+    ];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).toContain('\u25b2');
+    expect(html).toContain('\u25bc');
+  });
+
+  test('renders multiple scoring plays in order', () => {
+    const plays = [
+      makeScoringPlay(3, true,  'Home Run',   'Aaron Judge',    1, 0),
+      makeScoringPlay(5, false, 'RBI Single', 'Rafael Devers',  1, 2),
+      makeScoringPlay(7, true,  'Sacrifice Fly', 'Juan Soto',   2, 2),
+    ];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    const rows = (html.match(/scoring-play-row/g) || []).length;
+    expect(rows).toBe(3);
+  });
 });
