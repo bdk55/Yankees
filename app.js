@@ -161,7 +161,9 @@ const YANKEES_ID = 147;
           ${scoringPlays.map(p => {
             const half = p.about?.isTopInning ? '\u25b2' : '\u25bc';
             const inn  = p.about?.ordinalNum || '';
-            const desc = p.matchup?.batter?.fullName ? `${p.matchup.batter.fullName} \u2014 ${p.result?.event || ''}` : (p.result?.event || '');
+            const rbi  = p.result?.rbi;
+            const rbiStr = rbi > 0 ? ` (${rbi} RBI)` : '';
+            const desc = p.matchup?.batter?.fullName ? `${p.matchup.batter.fullName} \u2014 ${p.result?.event || ''}${rbiStr}` : (p.result?.event || '');
             const away = p.result?.awayScore ?? 0;
             const home = p.result?.homeScore ?? 0;
             return `<div class="scoring-play-row"><span class="sp-inning">${half} ${inn}</span><span class="sp-desc">${desc}</span><span class="sp-score">${away}\u2013${home}</span></div>`;

@@ -812,9 +812,9 @@ describe('buildLiveDetail', () => {
   });
 
   // Scoring plays
-  const makeScoringPlay = (inning, isTop, event, batter, away, home) => ({
+  const makeScoringPlay = (inning, isTop, event, batter, away, home, rbi = null) => ({
     about: { isScoringPlay: true, isTopInning: isTop, ordinalNum: `${inning}th` },
-    result: { event, awayScore: away, homeScore: home },
+    result: { event, awayScore: away, homeScore: home, ...(rbi !== null ? { rbi } : {}) },
     matchup: { batter: { fullName: batter } },
   });
 
@@ -862,6 +862,30 @@ describe('buildLiveDetail', () => {
     const html = buildLiveDetail(makeLinescore(), plays);
     const rows = (html.match(/scoring-play-row/g) || []).length;
     expect(rows).toBe(3);
+  });
+
+  test('shows RBI count in description when rbi > 0', () => {
+    const plays = [makeScoringPlay(3, true, 'Home Run', 'Aaron Judge', 2, 0, 2)];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).toContain('(2 RBI)');
+  });
+
+  test('shows 1 RBI correctly (not plural issue)', () => {
+    const plays = [makeScoringPlay(5, false, 'RBI Single', 'Juan Soto', 0, 1, 1)];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).toContain('(1 RBI)');
+  });
+
+  test('omits RBI when rbi is 0 (e.g. wild pitch, error)', () => {
+    const plays = [makeScoringPlay(7, true, 'Wild Pitch', 'Aaron Judge', 3, 0, 0)];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).not.toContain('RBI');
+  });
+
+  test('omits RBI when rbi field is absent', () => {
+    const plays = [makeScoringPlay(3, true, 'Home Run', 'Aaron Judge', 1, 0)];
+    const html = buildLiveDetail(makeLinescore(), plays);
+    expect(html).not.toContain('RBI');
   });
 
   // Line score table
