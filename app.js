@@ -108,7 +108,7 @@ const YANKEES_ID = 147;
       return map[name] || name.split(' ').pop().slice(0,3).toUpperCase();
     }
 
-    function buildLiveDetail(ls, scoringPlays = []) {
+    function buildLiveDetail(ls, scoringPlays = [], teams = {}) {
       if (!ls || !ls.offense || !ls.defense?.pitcher) return '';
       const onFirst  = !!ls.offense?.first;
       const onSecond = !!ls.offense?.second;
@@ -118,12 +118,43 @@ const YANKEES_ID = 147;
       const batter   = ls.offense?.batter?.fullName  || '\u2014';
       const onDeck   = ls.offense?.onDeck?.fullName  || '\u2014';
       const pitcher  = ls.defense?.pitcher?.fullName || '\u2014';
-      const awayHits = ls.teams?.away?.hits  ?? '\u2014';
-      const homeHits = ls.teams?.home?.hits  ?? '\u2014';
-      const awayErr  = ls.teams?.away?.errors ?? '\u2014';
-      const homeErr  = ls.teams?.home?.errors ?? '\u2014';
       const pips = (count, max, cls) => Array.from({length: max}, (_,i) =>
         `<div class="count-pip ${cls}${i < count ? ' on' : ''}"></div>`).join('');
+      const inns    = ls.innings || [];
+      const maxInn  = Math.max(9, ls.currentInning || 9);
+      const innNums = Array.from({length: maxInn}, (_, i) => i + 1);
+      const cell = (side, n) => {
+        const inn = inns.find(i => i.num === n);
+        if (!inn) return '<td class="ls-inn"></td>';
+        const runs = inn[side]?.runs;
+        return `<td class="ls-inn">${runs != null ? runs : ''}</td>`;
+      };
+      const lsTable = `
+        <div class="linescore-wrap">
+          <table class="linescore-table">
+            <thead><tr>
+              <th class="ls-th-team"></th>
+              ${innNums.map(n => `<th class="ls-th-inn">${n}</th>`).join('')}
+              <th class="ls-th-rhe ls-sep">R</th><th class="ls-th-rhe">H</th><th class="ls-th-rhe">E</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="ls-team">${teams.away || ''}</td>
+                ${innNums.map(n => cell('away', n)).join('')}
+                <td class="ls-rhe ls-sep">${ls.teams?.away?.runs ?? ''}</td>
+                <td class="ls-rhe">${ls.teams?.away?.hits ?? ''}</td>
+                <td class="ls-rhe">${ls.teams?.away?.errors ?? ''}</td>
+              </tr>
+              <tr>
+                <td class="ls-team">${teams.home || ''}</td>
+                ${innNums.map(n => cell('home', n)).join('')}
+                <td class="ls-rhe ls-sep">${ls.teams?.home?.runs ?? ''}</td>
+                <td class="ls-rhe">${ls.teams?.home?.hits ?? ''}</td>
+                <td class="ls-rhe">${ls.teams?.home?.errors ?? ''}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>`;
       const scoringSection = scoringPlays.length ? `
         <div class="scoring-plays">
           <div class="meta-key" style="margin-bottom:0.35rem">Scoring Plays</div>
@@ -170,10 +201,7 @@ const YANKEES_ID = 147;
               <div class="live-detail-cell"><div class="meta-key">On Deck</div><div class="live-player-name">${onDeck}</div></div>
               <div class="live-detail-cell"><div class="meta-key">Pitching</div><div class="live-player-name">${pitcher}</div></div>
             </div>
-            <div class="live-he-row">
-              <span class="meta-key">H</span><span class="live-he-val">${awayHits}\u2013${homeHits}</span>
-              <span class="meta-key">E</span><span class="live-he-val">${awayErr}\u2013${homeErr}</span>
-            </div>
+            ${lsTable}
             ${scoringSection}
           </div>
         </details>`;
@@ -236,7 +264,10 @@ const YANKEES_ID = 147;
       const oppTeamDiv = `<div class="team"><div class="team-abbr opp">${oppAbbr}</div><div class="team-full">${oppName}</div><div class="team-record">${oppRec}</div></div>`;
       const leftTeam  = isHome ? oppTeamDiv  : yankeeTeamDiv;
       const rightTeam = isHome ? yankeeTeamDiv : oppTeamDiv;
-      const liveDetail = isLive ? buildLiveDetail(ls, game.scoringPlays || []) : '';
+      const liveDetail = isLive ? buildLiveDetail(ls, game.scoringPlays || [], {
+        away: isHome ? oppAbbr : 'NYY',
+        home: isHome ? 'NYY' : oppAbbr,
+      }) : '';
       return `
         <div class="card">
           <div class="card-header"><div class="card-header-dot"></div><div class="card-label">Today's Game</div></div>
