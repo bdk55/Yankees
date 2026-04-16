@@ -61,8 +61,8 @@ const YANKEES_ID = 147;
     }
 
     const BROADCAST_URLS = {
-      'YES':         'https://www.gothamapp.com',
-      'YES Network': 'https://www.gothamapp.com',
+      'YES':         'https://www.gothamsports.com',
+      'YES Network': 'https://www.gothamsports.com',
       'MLB.TV':      'https://www.mlb.com/tv',
       'ESPN':        'https://www.espn.com/watch',
       'ESPN+':       'https://plus.espn.com',
