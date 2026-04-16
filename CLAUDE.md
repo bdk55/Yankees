@@ -64,7 +64,7 @@ state === 'Live' || detail.includes('Progress') || detail.includes('Delay')
 ### Broadcasts
 - Radio types filtered by: `new Set(['AM','FM','XM','Radio'])`
 - SiriusXM Yankees always shown (direct channel link): `https://siriusxm.com/player/channel-linear/entity/21fd583e-8f6a-b869-4f75-9e8a3f604eb0`
-- YES Network links to `https://www.gothamapp.com` — **NOTE: user says this is wrong, should link to "Gotham Sports" app, not "Gotham App". Correct URL still needed.**
+- YES Network links to `https://www.gothamsports.com` (Gotham Sports streaming app)
 
 ### Auto-refresh
 - 30s interval when game is live
@@ -98,4 +98,3 @@ Priority order:
 4. Silently degrades to look "fine" — never do this
 
 ## Pending / Known Issues
-- **Gotham Sports URL:** The YES Network broadcast link currently points to `https://www.gothamapp.com` (wrong app). Need the correct deep link or URL for the Gotham Sports app. User confirmed `gothamapp.com` is incorrect.
