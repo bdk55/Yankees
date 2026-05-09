@@ -37,6 +37,9 @@ const YANKEES_ID = 147;
           const pb = await fetchJSON(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/playByPlay`);
           game.scoringPlays = (pb.allPlays || []).filter(p => p.about?.isScoringPlay);
         } catch (e) {}
+        try {
+          game.boxscore = await fetchJSON(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/boxscore`);
+        } catch (e) {}
       }
       return game;
     }
@@ -108,16 +111,16 @@ const YANKEES_ID = 147;
       return map[name] || name.split(' ').pop().slice(0,3).toUpperCase();
     }
 
-    function buildLiveDetail(ls, scoringPlays = [], teams = {}) {
+    function buildLiveDetail(ls, scoringPlays = [], teams = {}, boxscore = null) {
       if (!ls || !ls.offense || !ls.defense?.pitcher) return '';
       const onFirst  = !!ls.offense?.first;
       const onSecond = !!ls.offense?.second;
       const onThird  = !!ls.offense?.third;
       const balls    = ls.balls   ?? 0;
       const strikes  = ls.strikes ?? 0;
-      const batter   = ls.offense?.batter?.fullName  || '\u2014';
-      const onDeck   = ls.offense?.onDeck?.fullName  || '\u2014';
-      const pitcher  = ls.defense?.pitcher?.fullName || '\u2014';
+      const batter   = ls.offense?.batter?.fullName  || '—';
+      const onDeck   = ls.offense?.onDeck?.fullName  || '—';
+      const pitcher  = ls.defense?.pitcher?.fullName || '—';
       const pips = (count, max, cls) => Array.from({length: max}, (_,i) =>
         `<div class="count-pip ${cls}${i < count ? ' on' : ''}"></div>`).join('');
       const inns    = ls.innings || [];
@@ -155,25 +158,51 @@ const YANKEES_ID = 147;
             </tbody>
           </table>
         </div>`;
+      const currentBatterId = ls.offense?.batter?.id;
+      const extractLineup = bsTeam => {
+        if (!bsTeam?.battingOrder?.length) return [];
+        return bsTeam.battingOrder.map(id => {
+          const p = bsTeam.players?.[`ID${id}`];
+          return { id, name: p?.person?.fullName || '—', pos: p?.position?.abbreviation || '' };
+        });
+      };
+      const awayLineup = boxscore ? extractLineup(boxscore.teams?.away) : [];
+      const homeLineup = boxscore ? extractLineup(boxscore.teams?.home) : [];
+      const renderLineupCol = (lineup, label) => `
+        <div class="lineup-col">
+          <div class="lineup-team-label">${label}</div>
+          ${lineup.map((p, i) => `<div class="lineup-row${p.id === currentBatterId ? ' batting' : ''}"><span class="lineup-num">${i + 1}</span><span class="lineup-pos">${p.pos}</span><span class="lineup-name">${p.name}</span></div>`).join('')}
+        </div>`;
+      const lineupSection = (awayLineup.length || homeLineup.length) ? `
+        <details class="lineup-details">
+          <summary class="lineup-summary">
+            <span class="live-detail-label">Lineups</span>
+            <span class="live-detail-chevron">▾</span>
+          </summary>
+          <div class="lineup-grid">
+            ${renderLineupCol(awayLineup, teams.away || 'Away')}
+            ${renderLineupCol(homeLineup, teams.home || 'Home')}
+          </div>
+        </details>` : '';
       const scoringSection = scoringPlays.length ? `
         <div class="scoring-plays">
           <div class="meta-key" style="margin-bottom:0.35rem">Scoring Plays</div>
           ${scoringPlays.map(p => {
-            const half = p.about?.isTopInning ? '\u25b2' : '\u25bc';
+            const half = p.about?.isTopInning ? '▲' : '▼';
             const inn  = p.about?.ordinalNum || '';
             const rbi  = p.result?.rbi;
             const rbiStr = rbi > 0 ? ` (${rbi} RBI)` : '';
-            const desc = p.matchup?.batter?.fullName ? `${p.matchup.batter.fullName} \u2014 ${p.result?.event || ''}${rbiStr}` : (p.result?.event || '');
+            const desc = p.matchup?.batter?.fullName ? `${p.matchup.batter.fullName} — ${p.result?.event || ''}${rbiStr}` : (p.result?.event || '');
             const away = p.result?.awayScore ?? 0;
             const home = p.result?.homeScore ?? 0;
-            return `<div class="scoring-play-row"><span class="sp-inning">${half} ${inn}</span><span class="sp-desc">${desc}</span><span class="sp-score">${away}\u2013${home}</span></div>`;
+            return `<div class="scoring-play-row"><span class="sp-inning">${half} ${inn}</span><span class="sp-desc">${desc}</span><span class="sp-score">${away}–${home}</span></div>`;
           }).join('')}
         </div>` : '';
       return `
         <details class="live-detail">
           <summary class="live-detail-summary">
             <span class="live-detail-label">Live Game</span>
-            <span class="live-detail-chevron">\u25be</span>
+            <span class="live-detail-chevron">▾</span>
           </summary>
           <div class="live-detail-body">
             <div class="live-detail-row">
@@ -205,6 +234,7 @@ const YANKEES_ID = 147;
             </div>
             ${lsTable}
             ${scoringSection}
+            ${lineupSection}
           </div>
         </details>`;
     }
@@ -218,7 +248,7 @@ const YANKEES_ID = 147;
       const oppTeam  = isHome ? game.teams.away : game.teams.home;
       const oppName  = oppTeam.team.name;
       const oppAbbr  = abbr(oppName);
-      const rec      = t => { const r = t.leagueRecord || t.team?.record?.leagueRecord; return r ? `${r.wins}\u2013${r.losses}` : ''; };
+      const rec      = t => { const r = t.leagueRecord || t.team?.record?.leagueRecord; return r ? `${r.wins}–${r.losses}` : ''; };
       const yankRec  = rec(yankTeam);
       const oppRec   = rec(oppTeam);
       const state   = game.status.abstractGameState;
@@ -231,10 +261,10 @@ const YANKEES_ID = 147;
       const yankRuns = isHome ? homeRuns : awayRuns;
       const oppRuns  = isHome ? awayRuns : homeRuns;
       const centerCol = (isLive || isFinal)
-        ? `<div class="score-display"><div class="score-digit">${isHome ? oppRuns : yankRuns}</div><div class="score-dash">\u2013</div><div class="score-digit">${isHome ? yankRuns : oppRuns}</div></div>`
+        ? `<div class="score-display"><div class="score-digit">${isHome ? oppRuns : yankRuns}</div><div class="score-dash">–</div><div class="score-digit">${isHome ? yankRuns : oppRuns}</div></div>`
         : `<div class="vs-text">VS</div>`;
       const statusPill = isLive
-        ? `<div class="status-pill live"><div class="live-dot"></div>${ls.inningHalf === 'Bottom' ? '\u25bc' : '\u25b2'} ${ls.currentInningOrdinal || ''} &nbsp;\u00b7&nbsp; ${ls.outs ?? 0} out${ls.outs === 1 ? '' : 's'}</div>`
+        ? `<div class="status-pill live"><div class="live-dot"></div>${ls.inningHalf === 'Bottom' ? '▼' : '▲'} ${ls.currentInningOrdinal || ''} &nbsp;·&nbsp; ${ls.outs ?? 0} out${ls.outs === 1 ? '' : 's'}</div>`
         : isFinal ? `<div class="status-pill final">Final</div>`
         : `<div class="status-pill scheduled">${fmtTime(game.gameDate)}</div>`;
       const challengeDots = n => { const remaining = n ?? 1; return Array.from({length:1},(_,i)=>`<div class="challenge-dot${i>=remaining?' used':''}"></div>`).join(''); };
@@ -251,13 +281,13 @@ const YANKEES_ID = 147;
       const tvBroadcasts    = allBroadcasts.filter(b => b.name && !RADIO_TYPES.has(b.type));
       const radioBroadcasts = allBroadcasts.filter(b => b.name && RADIO_TYPES.has(b.type));
       const renderLinks = (list, urlMap) => list.length
-        ? list.map(b => { const url = Object.entries(urlMap).find(([k])=>b.name.includes(k))?.[1]; return url ? `<a href="${url}" class="broadcast-link">${b.name}</a>` : `<span>${b.name}</span>`; }).join('<span style="color:var(--muted)"> \u00b7 </span>')
+        ? list.map(b => { const url = Object.entries(urlMap).find(([k])=>b.name.includes(k))?.[1]; return url ? `<a href="${url}" class="broadcast-link">${b.name}</a>` : `<span>${b.name}</span>`; }).join('<span style="color:var(--muted)"> · </span>')
         : null;
       const tvLinks = renderLinks(tvBroadcasts, BROADCAST_URLS) || 'TBD';
       const siriusLink = `<a href="https://siriusxm.com/player/channel-linear/entity/21fd583e-8f6a-b869-4f75-9e8a3f604eb0" class="broadcast-link">SiriusXM Yankees</a>`;
       const apiRadioLinks = renderLinks(radioBroadcasts, RADIO_URLS);
-      const radioLinks = apiRadioLinks ? `${siriusLink}<span style="color:var(--muted)"> \u00b7 </span>${apiRadioLinks}` : siriusLink;
-      const venue    = game.venue?.name || '\u2014';
+      const radioLinks = apiRadioLinks ? `${siriusLink}<span style="color:var(--muted)"> · </span>${apiRadioLinks}` : siriusLink;
+      const venue    = game.venue?.name || '—';
       const homeAway = isHome ? 'Home' : 'Away';
       const pitcher = (p, label) => p
         ? `<div class="pitcher-cell"><div class="pitcher-team-label">${label}</div><div class="pitcher-name">${p.fullName}</div>${p.note?`<div class="pitcher-note">${p.note}</div>`:''}</div>`
@@ -269,7 +299,7 @@ const YANKEES_ID = 147;
       const liveDetail = isLive ? buildLiveDetail(ls, game.scoringPlays || [], {
         away: isHome ? oppAbbr : 'NYY',
         home: isHome ? 'NYY' : oppAbbr,
-      }) : '';
+      }, game.boxscore || null) : '';
       return `
         <div class="card">
           <div class="card-header"><div class="card-header-dot"></div><div class="card-label">Today's Game</div></div>
@@ -279,7 +309,7 @@ const YANKEES_ID = 147;
             ${liveDetail}
             <div class="meta-grid">
               <div class="meta-cell"><div class="meta-key">First Pitch</div><div class="meta-val">${fmtTime(game.gameDate)}</div></div>
-              <div class="meta-cell"><div class="meta-key">Venue</div><div class="meta-val">${homeAway} \u00b7 ${venue}</div></div>
+              <div class="meta-cell"><div class="meta-key">Venue</div><div class="meta-val">${homeAway} · ${venue}</div></div>
               <div class="meta-cell full"><div class="meta-key">Watch</div><div class="meta-val" style="display:flex;flex-wrap:wrap;gap:0.3rem 0.6rem;">${tvLinks}</div></div>
               <div class="meta-cell full"><div class="meta-key">Listen</div><div class="meta-val" style="display:flex;flex-wrap:wrap;gap:0.3rem 0.6rem;">${radioLinks}</div></div>
             </div>
@@ -301,10 +331,10 @@ const YANKEES_ID = 147;
         const won    = yankT.isWinner;
         const R      = won ? 'W' : 'L';
         won ? wins++ : losses++;
-        return `<div class="game-row"><div class="result-pill ${R}">${R}</div><div class="game-opp">${isHome?'vs':'@'} ${oppT.team.name}</div><div class="game-score-val">${yankT.score??0}\u2013${oppT.score??0}</div><div class="game-date-val">${fmt(g.officialDate||g.gameDate?.slice(0,10))}</div></div>`;
+        return `<div class="game-row"><div class="result-pill ${R}">${R}</div><div class="game-opp">${isHome?'vs':'@'} ${oppT.team.name}</div><div class="game-score-val">${yankT.score??0}–${oppT.score??0}</div><div class="game-date-val">${fmt(g.officialDate||g.gameDate?.slice(0,10))}</div></div>`;
       });
       const pips = games.map(g => { const isHome=g.teams.home.team.id===YANKEES_ID; const won=(isHome?g.teams.home:g.teams.away).isWinner; return `<div class="streak-pip ${won?'W':'L'}"></div>`; }).join('');
-      return `<div class="card"><div class="card-header"><div class="card-header-dot"></div><div class="card-label">Last 10 Games</div></div><div class="card-body"><div class="streak-bar">${pips}<span class="streak-record">${wins}\u2013${losses}</span></div><div class="game-list">${rows.join('')}</div></div></div>`;
+      return `<div class="card"><div class="card-header"><div class="card-header-dot"></div><div class="card-label">Last 10 Games</div></div><div class="card-body"><div class="streak-bar">${pips}<span class="streak-record">${wins}–${losses}</span></div><div class="game-list">${rows.join('')}</div></div></div>`;
     }
 
     async function getUpcoming() {
@@ -341,9 +371,9 @@ const YANKEES_ID = 147;
       const sorted = [...teams].sort((a,b)=>a.divisionRank-b.divisionRank);
       const rows = sorted.map(t => {
         const isY = t.team.id===YANKEES_ID;
-        const gb  = t.gamesBack==='-'?'<span class="gb-dash">\u2014</span>':t.gamesBack;
+        const gb  = t.gamesBack==='-'?'<span class="gb-dash">—</span>':t.gamesBack;
         const pct = parseFloat(t.winningPercentage).toFixed(3).replace(/^0/,'');
-        return `<tr class="${isY?'yankees-row':''}"><td>${isY?'\u2605 ':''}${abbr(t.team.name)}</td><td>${t.wins}</td><td>${t.losses}</td><td>${pct}</td><td>${gb}</td></tr>`;
+        return `<tr class="${isY?'yankees-row':''}"><td>${isY?'★ ':''}${abbr(t.team.name)}</td><td>${t.wins}</td><td>${t.losses}</td><td>${pct}</td><td>${gb}</td></tr>`;
       });
       return `<div class="card"><div class="card-header"><div class="card-header-dot"></div><div class="card-label">AL East Standings</div></div><div class="card-body"><table class="standings-table"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th></tr></thead><tbody>${rows.join('')}</tbody></table></div></div>`;
     }
@@ -354,7 +384,7 @@ const YANKEES_ID = 147;
       if (!rec) return;
       const w=rec.wins, l=rec.losses;
       const pct=(w/(w+l||1)).toFixed(3).replace(/^0/,'');
-      document.getElementById('stat-bar').innerHTML=`<div class="stat-chip"><strong>${w}\u2013${l}</strong> Record</div><div class="stat-chip"><strong>${pct}</strong> Win %</div>`;
+      document.getElementById('stat-bar').innerHTML=`<div class="stat-chip"><strong>${w}–${l}</strong> Record</div><div class="stat-chip"><strong>${pct}</strong> Win %</div>`;
     }
 
     let refreshTimer = null;
@@ -380,10 +410,10 @@ const YANKEES_ID = 147;
     if (typeof module === 'undefined') {
       const refreshBtn = document.querySelector('.refresh-btn');
       refreshBtn.addEventListener('click', async () => {
-        refreshBtn.textContent = '\u21bb Refreshing\u2026';
+        refreshBtn.textContent = '↻ Refreshing…';
         refreshBtn.disabled = true;
         await main();
-        refreshBtn.textContent = '\u21bb Refresh';
+        refreshBtn.textContent = '↻ Refresh';
         refreshBtn.disabled = false;
       });
       main();
