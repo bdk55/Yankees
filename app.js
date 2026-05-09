@@ -174,7 +174,7 @@ const YANKEES_ID = 147;
           ${lineup.map((p, i) => `<div class="lineup-row${p.id === currentBatterId ? ' batting' : ''}"><span class="lineup-num">${i + 1}</span><span class="lineup-pos">${p.pos}</span><span class="lineup-name">${p.name}</span></div>`).join('')}
         </div>`;
       const lineupSection = (awayLineup.length || homeLineup.length) ? `
-        <details class="lineup-details">
+        <details class="lineup-details" open>
           <summary class="lineup-summary">
             <span class="live-detail-label">Lineups</span>
             <span class="live-detail-chevron">▾</span>
