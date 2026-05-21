@@ -277,7 +277,7 @@ const YANKEES_ID = 147;
         : isFinal ? `<div class="status-pill final">Final</div>`
         : isPregame ? `<div class="status-pill pregame">Pregame</div>`
         : `<div class="status-pill scheduled">${fmtTime(game.gameDate)}</div>`;
-      const challengeDots = n => { const remaining = n ?? 1; return Array.from({length:1},(_,i)=>`<div class="challenge-dot${i>=remaining?' used':''}"></div>`).join(''); };
+      const challengeDots = n => { const remaining = n ?? 1; return Array.from({length:1},(_,i)=>`<div class="challenge-dot${i>=remaining?' used':''}" ></div>`).join(''); };
       const homeRem = ls.teams?.home?.remainingChallenges;
       const awayRem = ls.teams?.away?.remainingChallenges;
       const challengeRow = isLive && (homeRem != null || awayRem != null) ? `
