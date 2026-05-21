@@ -229,12 +229,70 @@ describe('buildGameCard', () => {
     expect(buildGameCard(game)).toContain('status-pill live');
   });
 
-  test('detects live state when detailedState contains "Delay"', () => {
+  test('shows delayed pill when detailedState contains "Delay"', () => {
     const game = makeGame({
       status: { abstractGameState: 'Live', detailedState: 'Rain Delay' },
       linescore: { teams: { home: { runs: 1 }, away: { runs: 1 } }, currentInningOrdinal: '7th', inningHalf: 'Top', outs: 0 },
     });
-    expect(buildGameCard(game)).toContain('status-pill live');
+    const html = buildGameCard(game);
+    expect(html).toContain('status-pill delayed');
+    expect(html).not.toContain('status-pill live');
+  });
+
+  test('delayed pill includes inning when game has started', () => {
+    const game = makeGame({
+      status: { abstractGameState: 'Live', detailedState: 'Rain Delay' },
+      linescore: { teams: { home: { runs: 2 }, away: { runs: 0 } }, currentInningOrdinal: '3rd', inningHalf: 'Bottom', outs: 1 },
+    });
+    expect(buildGameCard(game)).toContain('3rd');
+  });
+
+  test('delayed pill without inning for pre-game delay', () => {
+    const game = makeGame({
+      status: { abstractGameState: 'Preview', detailedState: 'Delayed: Rain' },
+      linescore: {},
+    });
+    const html = buildGameCard(game);
+    expect(html).toContain('status-pill delayed');
+    expect(html).toContain('Delayed');
+  });
+
+  test('shows postponed pill for postponed game', () => {
+    const game = makeGame({
+      status: { abstractGameState: 'Preview', detailedState: 'Postponed' },
+    });
+    const html = buildGameCard(game);
+    expect(html).toContain('status-pill postponed');
+    expect(html).toContain('Postponed');
+  });
+
+  test('postponed game does not show live panel', () => {
+    const game = makeGame({
+      status: { abstractGameState: 'Preview', detailedState: 'Postponed' },
+    });
+    expect(buildGameCard(game)).not.toContain('live-detail');
+  });
+
+  test('shows pregame pill when detailedState is Pre-Game', () => {
+    const game = makeGame({
+      status: { abstractGameState: 'Preview', detailedState: 'Pre-Game' },
+    });
+    const html = buildGameCard(game);
+    expect(html).toContain('status-pill pregame');
+    expect(html).toContain('Pregame');
+  });
+
+  test('shows pregame pill when detailedState is Warmup', () => {
+    const game = makeGame({
+      status: { abstractGameState: 'Preview', detailedState: 'Warmup' },
+    });
+    expect(buildGameCard(game)).toContain('status-pill pregame');
+  });
+
+  test('scheduled game (not pregame) shows time pill', () => {
+    const html = buildGameCard(makeGame());
+    expect(html).toContain('status-pill scheduled');
+    expect(html).not.toContain('status-pill pregame');
   });
 
   describe('score fallback chain', () => {

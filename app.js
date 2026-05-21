@@ -27,7 +27,8 @@ const YANKEES_ID = 147;
       const game = dates[0].games[0];
       const state  = game.status.abstractGameState;
       const detail = game.status.detailedState || '';
-      const isLive = state === 'Live' || detail.includes('Progress') || detail.includes('Delay');
+      const isPostponed = detail.includes('Postponed');
+      const isLive = !isPostponed && (state === 'Live' || detail.includes('Progress') || detail.includes('Delay'));
       if (isLive) {
         try {
           const ls = await fetchJSON(`https://statsapi.mlb.com/api/v1/game/${game.gamePk}/linescore`);
@@ -251,10 +252,14 @@ const YANKEES_ID = 147;
       const rec      = t => { const r = t.leagueRecord || t.team?.record?.leagueRecord; return r ? `${r.wins}–${r.losses}` : ''; };
       const yankRec  = rec(yankTeam);
       const oppRec   = rec(oppTeam);
-      const state   = game.status.abstractGameState;
-      const detail  = game.status.detailedState || '';
-      const isLive  = state === 'Live' || detail.includes('Progress') || detail.includes('Delay');
-      const isFinal = state === 'Final';
+      const state       = game.status.abstractGameState;
+      const detail      = game.status.detailedState || '';
+      const isPostponed = detail.includes('Postponed');
+      const isDelayed   = !isPostponed && detail.includes('Delay');
+      const isLive      = !isPostponed && (state === 'Live' || detail.includes('Progress') || detail.includes('Delay'));
+      const isFinal     = state === 'Final';
+      const isPregame   = !isPostponed && !isLive && state === 'Preview' &&
+        (detail.includes('Pre-Game') || detail.includes('Warmup'));
       const ls      = game.linescore || {};
       const homeRuns = ls.teams?.home?.runs ?? game.teams.home.score ?? 0;
       const awayRuns = ls.teams?.away?.runs ?? game.teams.away.score ?? 0;
@@ -263,9 +268,14 @@ const YANKEES_ID = 147;
       const centerCol = (isLive || isFinal)
         ? `<div class="score-display"><div class="score-digit">${isHome ? oppRuns : yankRuns}</div><div class="score-dash">–</div><div class="score-digit">${isHome ? yankRuns : oppRuns}</div></div>`
         : `<div class="vs-text">VS</div>`;
-      const statusPill = isLive
+      const statusPill = isPostponed
+        ? `<div class="status-pill postponed">Postponed</div>`
+        : isDelayed
+        ? `<div class="status-pill delayed">Delayed${ls.currentInningOrdinal ? ` · ${ls.inningHalf === 'Bottom' ? '▼' : '▲'} ${ls.currentInningOrdinal}` : ''}</div>`
+        : isLive
         ? `<div class="status-pill live"><div class="live-dot"></div>${ls.inningHalf === 'Bottom' ? '▼' : '▲'} ${ls.currentInningOrdinal || ''} &nbsp;·&nbsp; ${ls.outs ?? 0} out${ls.outs === 1 ? '' : 's'}</div>`
         : isFinal ? `<div class="status-pill final">Final</div>`
+        : isPregame ? `<div class="status-pill pregame">Pregame</div>`
         : `<div class="status-pill scheduled">${fmtTime(game.gameDate)}</div>`;
       const challengeDots = n => { const remaining = n ?? 1; return Array.from({length:1},(_,i)=>`<div class="challenge-dot${i>=remaining?' used':''}"></div>`).join(''); };
       const homeRem = ls.teams?.home?.remainingChallenges;
@@ -399,8 +409,9 @@ const YANKEES_ID = 147;
         app.innerHTML = buildGameCard(todayGame)+buildUpcomingCard(upcoming)+buildLast10Card(last10)+buildStandingsCard(standings);
         const gState=todayGame?.status.abstractGameState;
         const gDetail=todayGame?.status.detailedState||'';
-        const gameIsLive=gState==='Live'||gDetail.includes('Progress')||gDetail.includes('Delay');
-        const gameIsSoon=gState==='Preview'&&todayGame?.gameDate&&(new Date(todayGame.gameDate)-Date.now())<4*60*60*1000;
+        const gPostponed=gDetail.includes('Postponed');
+        const gameIsLive=!gPostponed&&(gState==='Live'||gDetail.includes('Progress')||gDetail.includes('Delay'));
+        const gameIsSoon=!gPostponed&&gState==='Preview'&&todayGame?.gameDate&&(new Date(todayGame.gameDate)-Date.now())<4*60*60*1000;
         if (gameIsLive||gameIsSoon) { clearTimeout(refreshTimer); refreshTimer=setTimeout(main,gameIsLive?30000:60000); }
       } catch(err) {
         app.innerHTML=`<div class="error-box">Failed to load game data: ${err.message}<br>Check your connection and reload.</div>`;
