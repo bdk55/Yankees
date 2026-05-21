@@ -243,6 +243,24 @@
       color: var(--accent);
     }
 
+    .status-pill.pregame {
+      background: rgba(168,184,200,0.08);
+      border: 1px solid rgba(168,184,200,0.2);
+      color: var(--silver);
+    }
+
+    .status-pill.delayed {
+      background: rgba(255,179,0,0.1);
+      border: 1px solid rgba(255,179,0,0.3);
+      color: #ffb300;
+    }
+
+    .status-pill.postponed {
+      background: rgba(96,125,139,0.12);
+      border: 1px solid rgba(96,125,139,0.25);
+      color: var(--muted);
+    }
+
     .live-dot {
       width: 7px; height: 7px;
       border-radius: 50%;
@@ -846,78 +864,14 @@
       white-space: nowrap;
     }
 
-    /* ─── Lineup ─────────────────────────────────────────────────────────────── */
-
-    .lineup-details {
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      margin-top: 0.25rem;
-    }
-    .lineup-details summary { list-style: none; }
-    .lineup-details summary::-webkit-details-marker { display: none; }
-
-    .lineup-summary {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.55rem 0 0.55rem 0;
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .lineup-summary:active { background: rgba(255,255,255,0.03); }
-
-    .lineup-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      padding-top: 0.35rem;
-      padding-bottom: 0.2rem;
-    }
-
-    .lineup-team-label {
-      font-size: 0.58rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.35rem;
-    }
-
-    .lineup-row {
-      display: grid;
-      grid-template-columns: 0.85rem 1.7rem 1fr;
-      align-items: center;
-      gap: 3px;
-      padding: 2px 3px;
-      border-radius: 4px;
-    }
-    .lineup-row.batting {
-      background: rgba(168,184,200,0.09);
-    }
-    .lineup-row.batting .lineup-name {
-      color: var(--silver);
-      font-weight: 600;
-    }
-
-    .lineup-num {
-      font-size: 0.6rem;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-      text-align: right;
-    }
-
-    .lineup-pos {
-      font-size: 0.6rem;
-      color: var(--muted);
-      font-weight: 600;
-      text-align: center;
-    }
-
-    .lineup-name {
-      font-size: 0.72rem;
-      color: var(--white);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    /* Batting lineups */
+    .lineup-details { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 0.25rem; }
+    .lineup-summary { display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0; cursor: pointer; user-select: none; }
+    .lineup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding-top: 0.35rem; }
+    .lineup-team-label { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem; }
+    .lineup-row { display: grid; grid-template-columns: 0.85rem 1.7rem 1fr; align-items: center; gap: 3px; padding: 2px 3px; border-radius: 4px; }
+    .lineup-row.batting { background: rgba(168,184,200,0.09); }
+    .lineup-row.batting .lineup-name { color: var(--silver); font-weight: 600; }
+    .lineup-num { font-size: 0.6rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+    .lineup-pos { font-size: 0.6rem; color: var(--muted); font-weight: 600; text-align: center; }
+    .lineup-name { font-size: 0.72rem; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
